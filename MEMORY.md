@@ -42,6 +42,27 @@ Both first and last names come from historical figures in the agent's domain. Ni
 
 ## Docs Structure
 - `docs/ARCHITECTURE.md` — system map, directory structure, info hierarchy, agent roster, roadmap
+- `docs/PRD.md` — our build spec (photography pipeline, CRM, financials, content, system health)
 - `docs/sops/` — AGENT-CREATION, MISSION-CONTROL, DATABASE, CRON-JOBS, GIT, SECURITY
-- `docs/reference/` — TECH-STACK, INTEGRATIONS
+- `docs/reference/` — TECH-STACK, INTEGRATIONS, ZIPGOLF-AUDIT
 - `docs/REFERENCE-PRD.md` — mature OpenClaw deployment example (26 features, full CRM, councils, analytics)
+
+## Mission Control Dashboard
+- Built from jwtidwell/mission_control, rebranded "Reese Operations"
+- 8 views: Operations, Blueprint, Pipeline, Financials, Clients, Content, System, Documents
+- Runs on port 3100, LAN accessible at http://192.168.68.147:3100
+- Agent headshots: AI-generated 3x3 sprite sheets per agent (expressions system)
+- Documents panel: upload → Dewey processes → indexed in reese-catalog.db
+- Chat/messaging with gateway: STILL BROKEN as of 2026-02-19. Need proper diagnosis.
+- Gateway bind: changed to "lan" mode for network access
+
+## Drive Structure (/Volumes/reeseai-memory/)
+- 23 GB organized: code/, photography/, data/, agents/, docs/, backups/
+- reese-catalog.db: 17 tables, ~67,800 records (contacts, emails, calendar, docs, media, YouTube)
+- data/databases/ is home for all SQLite databases
+- Backup at /Volumes/BACKUP/reeseai-backup/
+
+## Process Lessons
+- DIAGNOSE FIRST, then fix. Don't guess and ship untested code repeatedly.
+- Test end-to-end before telling Tyler to try something.
+- Don't have Brunel rewrite code without understanding the protocol first.
