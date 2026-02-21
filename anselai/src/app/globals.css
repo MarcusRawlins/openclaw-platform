@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  /* Backgrounds */
+  --bg-primary: #0a0b0f;
+  --bg-secondary: #12141c;
+  --bg-card: #181a24;
+  --bg-card-hover: #1e2130;
+
+  /* Text */
+  --text-primary: #e8eaed;
+  --text-secondary: #8b8fa3;
+  --text-muted: #5a5e72;
+
+  /* Borders */
+  --border: #2a2d3a;
+  --border-glow: #3a3d4a;
+
+  /* Accents */
+  --accent-blue: #4a9eff;
+  --accent-green: #34d399;
+  --accent-amber: #fbbf24;
+  --accent-red: #f87171;
+  --accent-purple: #a78bfa;
+  --accent-pink: #f472b6;
+  --accent-cyan: #22d3ee;
+
+  /* CRM-specific */
+  --stage-inquiry: #4a9eff;
+  --stage-booked: #34d399;
+  --stage-shooting: #fbbf24;
+  --stage-editing: #a78bfa;
+  --stage-delivered: #34d399;
+  --stage-completed: #8b8fa3;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-glow); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}

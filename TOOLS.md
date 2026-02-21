@@ -35,4 +35,40 @@ Skills are shared. Your setup is yours. Keeping them apart means you can update 
 
 ---
 
+## Directory Map — Where to Find Things
+
+**Workspace (active/small):**
+- `docs/ANSELAI-ARCHITECTURE.md` — AnselAI CRM spec
+- `docs/BUILD-BACKLOG.md` — Brunel's priority list
+- `docs/ARCHITECTURE.md` — system overview
+- `docs/PRD.md` — our build spec
+- `docs/sops/` — procedures (agent creation, cron, git, security, standing orders)
+- `docs/reference/` — tech stack, integrations, ZipGolf audit
+- `docs/REFERENCE-PRD.md` — mature OpenClaw example (inspiration)
+- `content/` — blog drafts, social content, resources (Ada's output)
+- `reviews/` — trigger files for Walt
+- `anselai/` — AnselAI CRM source code (port 3200)
+- `mission_control/` — Mission Control dashboard source (port 3100)
+- `clients/` — client-facing documents (timelines, etc.)
+- `memory/` — daily notes, heartbeat state
+
+**Memory Drive (/Volumes/reeseai-memory/):**
+- `agents/reviews/` — Walt's full review files
+- `agents/tasks/` — completed task archive
+- `agents/[id]/lesson-archive/` — archived lessons per agent
+- `agents/marcus/memory-archive/` — my archived memory items
+- `photography/leads/` — Scout's lead research
+- `photography/outreach/` — Ed's email drafts
+- `photography/pipeline/` — active pipeline data
+- `photography/brand/` — logos, fonts, brand assets
+- `photography/resources/` — courses, guides, templates
+- `data/databases/` — reese-catalog.db, reeseai.db
+- `code/wedding-crm/` — old AnselAI codebase (reference only)
+- `code/zipgolf/` — ZipGolf source
+- `AGENT-Images/` — agent headshots and sprite sheets
+
+**Agent configs (/Users/marcusrawlins/.openclaw/agents/):**
+- `[id]/AGENTS.md` — agent identity + instructions
+- `[id]/lessons.md` — active lessons (max 20)
+
 Add whatever helps you do your job. This is your cheat sheet.
