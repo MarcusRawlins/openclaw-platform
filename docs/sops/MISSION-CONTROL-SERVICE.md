@@ -1,145 +1,207 @@
-# Mission Control Service Management
+# Mission Control LaunchD Service
 
-## Problem
+## Overview
 
-Mission Control dev server (`bun run dev`) was not running persistently, causing API requests to fail and tasks to appear stuck in "queued" status even when agents successfully completed work.
+Mission Control is a Next.js dashboard that runs on port 3100, managed by macOS LaunchD for 24/7 uptime with automatic crash recovery.
 
-## Solution
+## Service Configuration
 
-Mission Control now runs as a persistent launchd service that:
-- Starts automatically on boot
-- Restarts automatically if it crashes
-- Keeps running in the background
-- Logs output for debugging
+**Location:** `~/Library/LaunchAgents/com.reese.missioncontrol.plist`
 
-## Service Details
+**Key Settings:**
+- **Label:** `com.reese.missioncontrol`
+- **Port:** 3100
+- **Working Directory:** `/Users/marcusrawlins/.openclaw/workspace/mission_control`
+- **Command:** `/Users/marcusrawlins/.bun/bin/bun run start` (production mode)
+- **Logs:** `/Users/marcusrawlins/.openclaw/logs/mission-control-*.log`
 
-**LaunchAgent:** `/Users/marcusrawlins/Library/LaunchAgents/com.mission-control.dev.plist`
+**Automatic Restart:**
+- `RunAtLoad: true` — Starts on boot
+- `KeepAlive.Crashed: true` — Restarts on crashes
+- `KeepAlive.SuccessfulExit: false` — Stays down on clean exit
+- `ThrottleInterval: 10` — Waits 10s between restart attempts
 
-**Working Directory:** `/Users/marcusrawlins/.openclaw/workspace/mission_control`
+## Service Management
 
-**Command:** `bun run dev`
-
-**Logs:**
-- stdout: `/Users/marcusrawlins/.openclaw/logs/mission-control-dev.out`
-- stderr: `/Users/marcusrawlins/.openclaw/logs/mission-control-dev.err`
-
-## Management Commands
-
-### Check if service is running:
+### Check Status
 ```bash
-launchctl list | grep mission-control
+launchctl list | grep mission
+```
+Output format: `PID  ExitCode  Label`
+- PID > 0: Running
+- `-`: Not loaded
+- Negative ExitCode: Last signal received (e.g., `-9` = SIGKILL)
+
+### Load Service
+```bash
+launchctl load ~/Library/LaunchAgents/com.reese.missioncontrol.plist
 ```
 
-### View recent logs:
+### Unload Service
 ```bash
-tail -f ~/.openclaw/logs/mission-control-dev.out
-tail -f ~/.openclaw/logs/mission-control-dev.err
+launchctl unload ~/Library/LaunchAgents/com.reese.missioncontrol.plist
 ```
 
-### Restart service:
+### Restart Service
 ```bash
-launchctl stop com.mission-control.dev
-launchctl start com.mission-control.dev
+launchctl unload ~/Library/LaunchAgents/com.reese.missioncontrol.plist
+launchctl load ~/Library/LaunchAgents/com.reese.missioncontrol.plist
 ```
 
-### Reload after config changes:
+### View Logs
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.mission-control.dev.plist
-launchctl load ~/Library/LaunchAgents/com.mission-control.dev.plist
+# Stdout (application logs)
+tail -f ~/.openclaw/logs/mission-control-stdout.log
+
+# Stderr (errors)
+tail -f ~/.openclaw/logs/mission-control-stderr.log
 ```
 
-### Disable service:
+### Find Running Process
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.mission-control.dev.plist
+ps aux | grep "next-server" | grep -v grep
 ```
-
-### Enable service:
-```bash
-launchctl load ~/Library/LaunchAgents/com.mission-control.dev.plist
-```
-
-## Health Check
-
-Mission Control should be accessible at: **http://localhost:3100**
-
-Test the API:
-```bash
-curl http://localhost:3100/api/tasks
-```
-
-If the server is running, you'll get JSON. If not, check the logs.
 
 ## Troubleshooting
 
-### Service won't start
-```bash
-# Check the error log
-cat ~/.openclaw/logs/mission-control-dev.err
+### Port Already in Use (EADDRINUSE)
+If you see "address already in use" errors:
 
-# Try running manually to see errors
-cd /Users/marcusrawlins/.openclaw/workspace/mission_control
-bun run dev
+1. Find what's using port 3100:
+```bash
+ps aux | grep "next\|bun" | grep 3100
 ```
 
-### Port already in use
+2. Kill the conflicting process:
 ```bash
-# Find what's using port 3100
-lsof -i :3100
+kill <PID>
+```
 
-# Kill the process
+3. Service will auto-restart cleanly
+
+### Service Won't Start
+Check logs for errors:
+```bash
+tail -50 ~/.openclaw/logs/mission-control-stderr.log
+```
+
+Common issues:
+- Missing dependencies: `cd mission_control && bun install`
+- Bad build: `cd mission_control && bun run build`
+- Permission issues: Check file ownership in workspace
+
+### Manual Start (Development)
+If you need to run manually for debugging:
+```bash
+cd mission_control
+bun run dev  # Development mode with hot reload
+```
+
+**Important:** Stop the LaunchD service first to avoid port conflicts!
+
+## Testing Crash Recovery
+
+Verified working:
+```bash
+# Get current PID
+ps aux | grep "next-server" | grep -v grep | awk '{print $2}'
+
+# Kill it
 kill -9 <PID>
 
-# Restart the service
-launchctl start com.mission-control.dev
+# Wait 12 seconds (ThrottleInterval + startup time)
+sleep 12
+
+# Verify it restarted
+ps aux | grep "next-server" | grep -v grep
 ```
 
-### Service crashes repeatedly
+Expected behavior: New process with different PID, service accessible on port 3100.
+
+## Configuration Details
+
+Full plist contents:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.reese.missioncontrol</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/marcusrawlins/.bun/bin/bun</string>
+        <string>run</string>
+        <string>start</string>
+    </array>
+    
+    <key>WorkingDirectory</key>
+    <string>/Users/marcusrawlins/.openclaw/workspace/mission_control</string>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+    
+    <key>StandardOutPath</key>
+    <string>/Users/marcusrawlins/.openclaw/logs/mission-control-stdout.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/Users/marcusrawlins/.openclaw/logs/mission-control-stderr.log</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/marcusrawlins/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+</dict>
+</plist>
+```
+
+## Deployment Checklist
+
+- [x] Remove all duplicate service files
+- [x] Create single service file: `com.reese.missioncontrol.plist`
+- [x] Configure with production settings (`bun run start`)
+- [x] Set correct PATH including bun location
+- [x] Configure logging to `.openclaw/logs/`
+- [x] Enable crash recovery (KeepAlive.Crashed)
+- [x] Test crash recovery (kill -9, verify restart)
+- [x] Verify service accessible on port 3100
+- [x] Document in SOP
+
+## Maintenance
+
+**After code changes:**
+1. Commit changes to git
+2. Restart service: `launchctl unload ... && launchctl load ...`
+3. Verify in logs that it started correctly
+
+**After system reboot:**
+Service starts automatically. No action needed.
+
+**Log rotation:**
+Logs append indefinitely. Consider adding log rotation if they grow large:
 ```bash
-# Check throttle interval (default: 10 seconds between restarts)
-# Edit the plist file if needed
+# Archive old logs
+cd ~/.openclaw/logs
+mv mission-control-stdout.log mission-control-stdout-$(date +%Y%m%d).log
+mv mission-control-stderr.log mission-control-stderr-$(date +%Y%m%d).log
 
-# Check for code errors in stderr log
-cat ~/.openclaw/logs/mission-control-dev.err
+# Service will create new files automatically
 ```
 
-## Development Workflow
+---
 
-**When making code changes:**
-1. Code changes will hot-reload automatically (Next.js dev mode)
-2. For config changes (next.config.ts, package.json), restart the service:
-   ```bash
-   launchctl stop com.mission-control.dev
-   launchctl start com.mission-control.dev
-   ```
-
-**When switching to production:**
-1. Build the production version:
-   ```bash
-   cd /Users/marcusrawlins/.openclaw/workspace/mission_control
-   bun run build
-   ```
-2. Update launchd plist to run `bun start` instead of `bun run dev`
-3. Reload the service
-
-## API Persistence Verification
-
-The task API correctly persists changes to `/Users/marcusrawlins/.openclaw/workspace/mission_control/data/tasks.json` when the server is running.
-
-**Test persistence:**
-```bash
-# Update a task
-curl -X PATCH http://localhost:3100/api/tasks/[task-id] \
-  -H 'Content-Type: application/json' \
-  -d '{"status":"active"}'
-
-# Verify it persisted
-cat ~/. openclaw/workspace/mission_control/data/tasks.json | grep [task-id]
-```
-
-## Notes
-
-- The service runs under your user account (not system-wide)
-- It will NOT start automatically if you're not logged in
-- For true always-on operation, consider using a system-level LaunchDaemon instead
-- Logs rotate automatically (managed by system)
+**Last Updated:** 2025-02-21  
+**Status:** ✅ Production-ready, crash recovery tested and verified
