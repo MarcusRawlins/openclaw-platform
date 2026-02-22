@@ -222,3 +222,29 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
+
+## 📚 Can't Find Something? Ask Dewey.
+
+**Dewey is the knowledge manager.** If you can't find a file, document, or piece of data:
+
+1. Try to find it yourself first (check docs, memory drive, workspace)
+2. If you're stuck → **ask Dewey** via sessions_send
+3. Dewey maintains the master index of WHERE everything is
+
+**What Dewey knows:**
+- Code repository locations (AnselAI, Mission Control, skills)
+- Documentation (SOPs, architecture, reference docs)
+- Data files (client data, leads, content, resources)
+- Agent outputs (reviews, reports, deliverables)
+- Configuration and credential locations
+
+**Example:**
+```
+Can't find Ed's outreach templates? → Ask Dewey
+Need to know where Brunel saves code? → Ask Dewey
+Looking for Scout's research reports? → Ask Dewey
+```
+
+Dewey maintains `/Volumes/reeseai-memory/data/knowledge-base/` with searchable indexes and quick reference guides.
+
+**Don't waste time searching blindly. Dewey is the librarian.**
