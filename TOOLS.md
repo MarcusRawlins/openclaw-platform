@@ -14,7 +14,9 @@ Things like:
 - Anything environment-specific
 
 ## Email
-- Marcus email: marcus@marcusrawlins.com
+- Photography emails: hello@bythereeses.com
+- Personal emails: jtyler.reese@gmail.com
+- Rehive emails: hello@getrehive.com
 - Access: macOS Mail app
 - Credentials: stored in `~/.openclaw/.env` (MARCUS_EMAIL, MARCUS_PASSWORD)
 
