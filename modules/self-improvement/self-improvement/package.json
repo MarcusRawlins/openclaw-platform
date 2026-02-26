@@ -1,0 +1,21 @@
+{
+  "name": "self-improvement",
+  "version": "1.0.0",
+  "description": "Automated systems for continuous agent improvement, platform health monitoring, security auditing, and proactive error reporting",
+  "main": "error-reporter.js",
+  "scripts": {
+    "test": "node testing/test-runner.js",
+    "test:tier1": "node testing/tier1-nightly.js",
+    "test:tier2": "node testing/tier2-weekly.js",
+    "test:tier3": "node testing/tier3-weekly.js",
+    "councils": "node councils/council-runner.js",
+    "councils:health": "node councils/council-runner.js --health-only",
+    "councils:security": "node councils/council-runner.js --security-only",
+    "councils:innovation": "node councils/council-runner.js --innovation-only"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0"
+  },
+  "author": "Marcus Rawlins (Opus)",
+  "license": "MIT"
+}
