@@ -1,0 +1,41 @@
+{
+  "name": "prompt-stacks",
+  "version": "1.0.0",
+  "description": "Dual prompt stack management for multi-model support",
+  "author": "Marcus Rawlins (Opus)",
+  "created": "2026-02-26",
+  
+  "paths": {
+    "prompts_dir": "/Users/marcusrawlins/.openclaw/workspace/prompts",
+    "claude_stack": "/Users/marcusrawlins/.openclaw/workspace/prompts/claude",
+    "gpt_stack": "/Users/marcusrawlins/.openclaw/workspace/prompts/gpt",
+    "shared": "/Users/marcusrawlins/.openclaw/workspace/prompts/shared",
+    "facts": "/Users/marcusrawlins/.openclaw/workspace/prompts/shared/facts.json"
+  },
+  
+  "stack_mapping": {
+    "anthropic": "claude",
+    "openai": "gpt",
+    "google": "gpt",
+    "lmstudio": "claude"
+  },
+  
+  "sync": {
+    "schedule": "0 2 * * *",
+    "timezone": "America/New_York",
+    "enabled": true
+  },
+  
+  "files": {
+    "per_agent": ["AGENTS.md"],
+    "shared": ["SOUL.md", "IDENTITY.md", "USER.md", "TOOLS.md", "HEARTBEAT.md", "MEMORY.md"],
+    "facts_source": "shared/facts.json"
+  },
+  
+  "scripts": {
+    "sync_review": "node /Users/marcusrawlins/.openclaw/workspace/skills/prompt-stacks/sync-review.js",
+    "swap": "node /Users/marcusrawlins/.openclaw/workspace/skills/prompt-stacks/swap.js",
+    "canary": "node /Users/marcusrawlins/.openclaw/workspace/skills/prompt-stacks/canary.js",
+    "generate": "node /Users/marcusrawlins/.openclaw/workspace/skills/prompt-stacks/generate.js"
+  }
+}
