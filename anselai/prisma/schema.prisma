@@ -79,3 +79,188 @@ enum ContactType {
   VENDOR
   OTHER
 }
+
+// Platform Integration Models
+model PlatformConnection {
+  id               String   @id @default(cuid())
+  platform         String   @unique // google, meta, pinterest, tiktok
+  accountId        String?
+  accessToken      String   // encrypted
+  refreshToken     String?  // encrypted
+  tokenExpiresAt   DateTime?
+  status           String   @default("active") // active, expired, error
+  lastSyncAt       DateTime?
+  lastErrorMessage String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  syncLogs         SyncLog[]
+  
+  @@index([platform])
+  @@index([status])
+}
+
+model SyncLog {
+  id                  String   @id @default(cuid())
+  platformConnection  PlatformConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  connectionId        String
+  syncType            String   // metrics, posts, ads, analytics
+  status              String   // started, success, failed
+  recordsProcessed    Int      @default(0)
+  errorMessage        String?
+  startedAt           DateTime @default(now())
+  completedAt         DateTime?
+  durationMs          Int?
+  
+  @@index([connectionId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// Content Models
+model Content {
+  id              String   @id @default(cuid())
+  platform        String   // instagram, tiktok, facebook, youtube, blog
+  title           String
+  description     String?
+  contentType     String   // post, reel, story, article
+  status          String   @default("draft") // draft, scheduled, published, archived
+  publishedAt     DateTime?
+  scheduledFor    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  metrics         ContentMetric[]
+  
+  @@index([platform])
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model ContentMetric {
+  id           String   @id @default(cuid())
+  content      Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId    String
+  
+  views        Int      @default(0)
+  likes        Int      @default(0)
+  comments     Int      @default(0)
+  shares       Int      @default(0)
+  saves        Int      @default(0)
+  engagement   Float    @default(0) // percentage
+  
+  measuredAt   DateTime @default(now())
+  
+  @@index([contentId])
+  @@index([measuredAt])
+}
+
+// Ad Campaign Models
+model AdCampaign {
+  id              String   @id @default(cuid())
+  platform        String   // facebook, instagram, google, tiktok
+  externalId      String?  // platform's campaign ID
+  name            String
+  status          String   @default("active") // active, paused, completed, failed
+  
+  budget          Float?
+  spent           Float    @default(0)
+  startDate       DateTime?
+  endDate         DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  metrics         AdMetric[]
+  
+  @@index([platform])
+  @@index([status])
+  @@index([externalId])
+}
+
+model AdMetric {
+  id          String   @id @default(cuid())
+  campaign    AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  ctr         Float    @default(0) // click-through rate
+  cpc         Float    @default(0) // cost per click
+  roas        Float    @default(0) // return on ad spend
+  
+  measuredAt  DateTime @default(now())
+  
+  @@index([campaignId])
+  @@index([measuredAt])
+}
+
+// Attribution & Insights
+model Review {
+  id          String   @id @default(cuid())
+  platform    String   // google, yelp, instagram
+  rating      Int
+  text        String
+  author      String?
+  reviewUrl   String?
+  createdAt   DateTime @default(now())
+  
+  @@index([platform])
+  @@index([rating])
+}
+
+model Inquiry {
+  id          String   @id @default(cuid())
+  source      String   // instagram_dm, facebook_message, google_form, website
+  name        String
+  email       String?
+  phone       String?
+  message     String
+  
+  status      String   @default("new") // new, contacted, qualified, converted, lost
+  respondedAt DateTime?
+  convertedAt DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([source])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  contactId   String?
+  eventType   String   // wedding, engagement, family, corporate
+  eventDate   DateTime
+  
+  status      String   @default("pending") // pending, confirmed, completed, cancelled
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([eventType])
+  @@index([eventDate])
+  @@index([status])
+}
+
+model Attribution {
+  id            String   @id @default(cuid())
+  conversionId  String   // inquiry, booking, etc
+  conversionType String   // inquiry, booking, payment
+  
+  firstTouchChannel String?
+  lastTouchChannel  String?
+  channels          String[] // array of all touchpoints
+  
+  journeyLength   Int
+  conversationDay DateTime
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([conversionType])
+  @@index([conversationDay])
+}
