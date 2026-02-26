@@ -1,91 +1,78 @@
 # Email Pipeline Setup
 
-## 1. Add Email Credentials to ~/.openclaw/.env
+## Current Accounts
 
-```bash
-# Photography (IMAP)
-PHOTOGRAPHY_EMAIL_HOST=imap.yourdomain.com
-PHOTOGRAPHY_EMAIL_PASSWORD=your-app-password
+| ID | Email | Provider | Status |
+|----|-------|----------|--------|
+| marcus-work | marcus@marcusrawlins.com | IMAP (mail.marcusrawlins.com) | Awaiting credentials |
+| marcus-personal | marcusvrawlins@gmail.com | Gmail IMAP | Awaiting credentials |
 
-# Rehive (IMAP)
-REHIVE_EMAIL_HOST=imap.yourdomain.com
-REHIVE_EMAIL_PASSWORD=your-app-password
+## Adding a New Account
 
-# Personal Gmail (OAuth or App Password)
-GMAIL_OAUTH_TOKEN=your-token
-# OR for app password:
-GMAIL_EMAIL_PASSWORD=your-app-password
-```
+1. Add credentials to `~/.openclaw/.env`:
+   ```
+   NEW_ACCOUNT_PASSWORD=your-password
+   ```
 
-## 2. Configure Himalaya
+2. Add account to `config.json` accounts array:
+   ```json
+   {
+     "id": "new-account",
+     "email": "you@example.com",
+     "provider": "imap",
+     "credentials_env": "NEW_ACCOUNT_PASSWORD",
+     "features": {
+       "scoring": true,
+       "labels": true,
+       "stage_tracking": true,
+       "draft_generation": true,
+       "escalation": true,
+       "auto_archive_spam": true
+     },
+     "folders": ["INBOX"],
+     "poll_interval_minutes": 10
+   }
+   ```
 
-After credentials are in .env, run:
-```bash
-himalaya account configure
-```
+3. Add himalaya account to `~/Library/Application Support/himalaya/config.toml`:
+   ```toml
+   [accounts.new-account]
+   email = "you@example.com"
+   display-name = "Display Name"
 
-Or create the config manually at:
-`~/Library/Application Support/himalaya/config.toml`
+   [accounts.new-account.imap]
+   host = "imap.provider.com"
+   port = 993
+   login = "you@example.com"
+   passwd.cmd = "grep NEW_ACCOUNT_PASSWORD ~/.openclaw/.env | cut -d= -f2"
 
-Template below (update host/port for your providers):
+   [accounts.new-account.smtp]
+   host = "smtp.provider.com"
+   port = 587
+   login = "you@example.com"
+   passwd.cmd = "grep NEW_ACCOUNT_PASSWORD ~/.openclaw/.env | cut -d= -f2"
+   ```
 
-```toml
-[accounts.photography]
-email = "hello@bythereeses.com"
-display-name = "By The Reeses"
-default = true
+4. Test: `himalaya -a you@example.com list --folder INBOX`
 
-[accounts.photography.imap]
-host = "imap.yourdomain.com"
-port = 993
-login = "hello@bythereeses.com"
-passwd.cmd = "grep PHOTOGRAPHY_EMAIL_PASSWORD ~/.openclaw/.env | cut -d= -f2"
+No code changes needed. The pipeline auto-discovers all accounts from config.json.
 
-[accounts.photography.smtp]
-host = "smtp.yourdomain.com"
-port = 587
-login = "hello@bythereeses.com"
-passwd.cmd = "grep PHOTOGRAPHY_EMAIL_PASSWORD ~/.openclaw/.env | cut -d= -f2"
+## Credential Setup
 
-[accounts.rehive]
-email = "hello@getrehive.com"
-display-name = "R3 Studios"
+### marcus@marcusrawlins.com (cPanel/custom host)
+- IMAP: mail.marcusrawlins.com:993
+- SMTP: mail.marcusrawlins.com:587
+- Env var: `MARCUS_WORK_EMAIL_PASSWORD`
 
-[accounts.rehive.imap]
-host = "imap.yourdomain.com"
-port = 993
-login = "hello@getrehive.com"
-passwd.cmd = "grep REHIVE_EMAIL_PASSWORD ~/.openclaw/.env | cut -d= -f2"
+### marcusvrawlins@gmail.com
+- IMAP: imap.gmail.com:993
+- SMTP: smtp.gmail.com:587
+- Requires Gmail App Password (not regular password)
+- Generate at: https://myaccount.google.com/apppasswords
+- Env var: `MARCUS_GMAIL_PASSWORD`
 
-[accounts.rehive.smtp]
-host = "smtp.yourdomain.com"
-port = 587
-login = "hello@getrehive.com"
-passwd.cmd = "grep REHIVE_EMAIL_PASSWORD ~/.openclaw/.env | cut -d= -f2"
+## Cron
 
-[accounts.personal]
-email = "jtyler.reese@gmail.com"
-display-name = "Tyler Reese"
-
-[accounts.personal.imap]
-host = "imap.gmail.com"
-port = 993
-login = "jtyler.reese@gmail.com"
-passwd.cmd = "grep GMAIL_EMAIL_PASSWORD ~/.openclaw/.env | cut -d= -f2"
-
-[accounts.personal.smtp]
-host = "smtp.gmail.com"
-port = 587
-login = "jtyler.reese@gmail.com"
-passwd.cmd = "grep GMAIL_EMAIL_PASSWORD ~/.openclaw/.env | cut -d= -f2"
-```
-
-## 3. Test
-
-```bash
-himalaya -a hello@bythereeses.com list --folder INBOX
-```
-
-## 4. Start Polling
-
-Cron job is pre-configured. Once himalaya works, the pipeline will poll automatically every 10 minutes.
+Polling cron job is created but **disabled** until himalaya is configured.
+Job ID: `ee2b7485-f26f-4616-8225-d2d35915cb88`
+Enable with: `openclaw cron update --id ee2b7485... --enabled true`
