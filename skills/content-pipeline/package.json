@@ -1,0 +1,30 @@
+{
+  "name": "content-pipeline",
+  "version": "1.0.0",
+  "description": "Automated content idea capture and pipeline with deduplication",
+  "main": "process-idea.js",
+  "scripts": {
+    "process": "node process-idea.js",
+    "manage": "node manage-ideas.js",
+    "list": "node manage-ideas.js list",
+    "stats": "node manage-ideas.js stats",
+    "history": "node manage-ideas.js history"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.7",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "content",
+    "ideas",
+    "deduplication",
+    "pipeline",
+    "rag"
+  ],
+  "author": "Reese AI",
+  "license": "MIT"
+}
