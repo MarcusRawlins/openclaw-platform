@@ -1,0 +1,14 @@
+{
+  "lastChecks": {
+    "email": null,
+    "calendar": null,
+    "weather": null,
+    "error_log_scan": null,
+    "security_audit": null,
+    "daily_maintenance": null
+  },
+  "lastSynthesis": null,
+  "corruptionRecovery": false,
+  "version": 1,
+  "agentId": "main"
+}
