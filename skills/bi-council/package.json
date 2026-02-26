@@ -1,0 +1,26 @@
+{
+  "name": "business-intelligence-council",
+  "version": "1.0.0",
+  "description": "Multi-agent business intelligence system analyzing business data through expert personas",
+  "main": "run-council.js",
+  "scripts": {
+    "sync": "node sync-all.js",
+    "experts": "node run-experts.js",
+    "council": "node run-council.js",
+    "cli": "node council-cli.js"
+  },
+  "keywords": [
+    "business-intelligence",
+    "analysis",
+    "strategic-recommendations"
+  ],
+  "author": "Brunel",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^9.0.0",
+    "node-fetch": "^2.6.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
