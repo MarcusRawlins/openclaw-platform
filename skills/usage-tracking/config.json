@@ -1,0 +1,89 @@
+{
+  "database": {
+    "path": "/Volumes/reeseai-memory/data/usage-tracking/usage.db"
+  },
+  "logging": {
+    "jsonl_dir": "/Volumes/reeseai-memory/data/usage-tracking/logs",
+    "buffer_size": 50,
+    "flush_interval_ms": 5000,
+    "store_prompt_preview": true,
+    "preview_length": 200
+  },
+  "archive": {
+    "retention_days": 90,
+    "archive_dir": "/Volumes/reeseai-memory/data/usage-tracking/archive"
+  },
+  "gateway_sync": {
+    "url": "http://localhost:18789",
+    "interval_minutes": 30,
+    "last_sync_file": "/Volumes/reeseai-memory/data/usage-tracking/.last-sync"
+  },
+  "budgets": {
+    "daily_usd": 10.00,
+    "monthly_usd": 150.00,
+    "alert_threshold_pct": 80
+  },
+  "redaction": {
+    "redact_emails": true,
+    "redact_paths": true,
+    "redact_amounts": true,
+    "redact_keys": true,
+    "custom_patterns": []
+  },
+  "pricing": {
+    "anthropic": {
+      "claude-opus-4-6": {
+        "input_per_1m": 15.00,
+        "output_per_1m": 75.00,
+        "cache_read_per_1m": 1.50,
+        "cache_write_per_1m": 18.75
+      },
+      "claude-sonnet-4-5": {
+        "input_per_1m": 3.00,
+        "output_per_1m": 15.00,
+        "cache_read_per_1m": 0.30,
+        "cache_write_per_1m": 3.75
+      },
+      "claude-sonnet-3-7": {
+        "input_per_1m": 3.00,
+        "output_per_1m": 15.00,
+        "cache_read_per_1m": 0.30,
+        "cache_write_per_1m": 3.75
+      }
+    },
+    "openai": {
+      "gpt-4-turbo": {
+        "input_per_1m": 10.00,
+        "output_per_1m": 30.00
+      },
+      "gpt-4o": {
+        "input_per_1m": 5.00,
+        "output_per_1m": 15.00
+      },
+      "gpt-4o-mini": {
+        "input_per_1m": 0.15,
+        "output_per_1m": 0.60
+      }
+    },
+    "lmstudio": {
+      "_default": {
+        "input_per_1m": 0,
+        "output_per_1m": 0,
+        "note": "Local models, zero API cost"
+      }
+    },
+    "google": {
+      "gemini-2.5-pro": {
+        "input_per_1m": 1.25,
+        "output_per_1m": 10.00
+      },
+      "gemini-2.0-flash": {
+        "input_per_1m": 0.10,
+        "output_per_1m": 0.40
+      }
+    }
+  },
+  "electricity_cost_per_kwh": 0.12,
+  "local_model_watts": 15,
+  "include_electricity_for_local": false
+}

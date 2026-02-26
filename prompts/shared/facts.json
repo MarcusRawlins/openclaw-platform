@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-02-26T12:00:00Z",
+  
+  "channels": {
+    "telegram_chat_id": "8172900205",
+    "primary_channel": "telegram"
+  },
+  
+  "services": {
+    "gateway_port": 18789,
+    "gateway_url": "http://localhost:18789",
+    "lm_studio_url": "http://127.0.0.1:1234",
+    "mission_control_port": 3100,
+    "anselai_port": 3200
+  },
+  
+  "paths": {
+    "workspace": "/Users/marcusrawlins/.openclaw/workspace",
+    "memory_drive": "/Volumes/reeseai-memory",
+    "backup_drive": "/Volumes/BACKUP/reeseai-backup",
+    "env_file": "/Users/marcusrawlins/.openclaw/.env",
+    "agents_dir": "/Users/marcusrawlins/.openclaw/agents",
+    "skills_dir": "/Users/marcusrawlins/.openclaw/workspace/skills"
+  },
+  
+  "emails": {
+    "photography": "hello@bythereeses.com",
+    "personal": "jtyler.reese@gmail.com",
+    "rehive": "hello@getrehive.com"
+  },
+  
+  "models": {
+    "marcus": "anthropic/claude-opus-4-6",
+    "marcus_default": "anthropic/claude-sonnet-4-5",
+    "brunel": "lmstudio/mistralai/devstral-small-2-2512",
+    "walt": "openai/gpt-4-turbo",
+    "scout": "lmstudio/gemma-3-12b-it",
+    "dewey": "lmstudio/gemma-3-12b-it",
+    "ada": "lmstudio/gemma-3-12b-it",
+    "ed": "lmstudio/gemma-3-12b-it",
+    "heartbeat": "lmstudio/qwen/qwen3-4b-2507"
+  },
+  
+  "security": {
+    "allowed_url_schemes": ["http", "https"],
+    "data_tiers": ["confidential", "internal", "restricted"],
+    "outbound_redaction": true
+  },
+  
+  "user": {
+    "name": "Tyler Reese",
+    "pronouns": "he/him",
+    "timezone": "America/New_York",
+    "primary_user_id": "8172900205"
+  }
+}

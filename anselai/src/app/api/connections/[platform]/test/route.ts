@@ -8,15 +8,12 @@ import { ConnectionManager } from '@/lib/integrations/connection-manager';
 
 export const runtime = 'nodejs';
 
-interface RouteParams {
-  params: {
-    platform: string;
-  };
-}
-
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ platform: string }> }
+) {
   try {
-    const { platform } = params;
+    const { platform } = await params;
 
     const isValid = await ConnectionManager.testConnection(platform);
 

@@ -87,8 +87,17 @@ EXIT_CODE=0
 OUTPUT=""
 
 if [ "$TIMEOUT" -gt 0 ]; then
-  OUTPUT=$(timeout "$TIMEOUT" bash -c "$COMMAND" 2>&1) || EXIT_CODE=$?
-  if [ $EXIT_CODE -eq 124 ]; then
+  # Use Perl-based timeout as fallback (macOS doesn't have GNU timeout)
+  # Try gtimeout first (from GNU coreutils), fall back to Perl
+  if command -v gtimeout &>/dev/null; then
+    OUTPUT=$(gtimeout "$TIMEOUT" bash -c "$COMMAND" 2>&1) || EXIT_CODE=$?
+  else
+    # Perl-based timeout: alarm() + exec
+    OUTPUT=$(perl -e "alarm($TIMEOUT); exec @ARGV" -- bash -c "$COMMAND" 2>&1) || EXIT_CODE=$?
+  fi
+  
+  # Check for timeout (exit code 124 for gtimeout, 142 for Perl SIGALRM)
+  if [ $EXIT_CODE -eq 124 ] || [ $EXIT_CODE -eq 142 ]; then
     node "$SCRIPT_DIR/log-end.js" "$RUN_ID" "timeout" "" "Exceeded ${TIMEOUT}s timeout" 2>/dev/null || true
     if [ -x "$NOTIFY" ]; then
       "$NOTIFY" "⏱ Job **${JOB_NAME}** timed out after ${TIMEOUT}s" --tier=high --source=cron 2>/dev/null || true

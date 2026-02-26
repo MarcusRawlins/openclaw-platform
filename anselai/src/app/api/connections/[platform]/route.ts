@@ -10,15 +10,12 @@ import { ConnectionManager } from '@/lib/integrations/connection-manager';
 
 export const runtime = 'nodejs';
 
-interface RouteParams {
-  params: {
-    platform: string;
-  };
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ platform: string }> }
+) {
   try {
-    const { platform } = params;
+    const { platform } = await params;
 
     const connection = await ConnectionManager.getConnection(platform);
 
@@ -58,10 +55,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
-    const { platform } = params;
+    const { platform } = await params;
     const body = await request.json();
     const { accessToken, refreshToken, tokenExpiresAt } = body;
 
@@ -106,9 +103,12 @@ export async function PUT(
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ platform: string }> }
+) {
   try {
-    const { platform } = params;
+    const { platform } = await params;
 
     await ConnectionManager.removeConnection(platform);
 

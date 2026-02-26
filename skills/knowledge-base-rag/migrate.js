@@ -27,50 +27,57 @@ class KnowledgeBaseMigrator {
 
   // Get list of files to migrate (prioritize .extracted.md for PDFs, transcript files for videos)
   getFilesToMigrate() {
-    const inventory = this.loadInventory();
     const files = [];
 
-    for (const item of inventory) {
-      // Prefer .extracted.md files for PDFs
-      if (item.file_type === 'pdf') {
-        if (item.extracted_file && fs.existsSync(path.join(this.kb_dir, item.extracted_file))) {
-          files.push({
-            path: path.join(this.kb_dir, item.extracted_file),
-            title: item.title,
-            type: 'local_pdf',
-            tags: item.tags || [],
-            source: item
-          });
-        } else if (item.file_path && fs.existsSync(path.join(this.kb_dir, item.file_path))) {
-          files.push({
-            path: path.join(this.kb_dir, item.file_path),
-            title: item.title,
-            type: 'local_pdf',
-            tags: item.tags || [],
-            source: item
-          });
+    // Load PDF extraction report
+    const pdfReportPath = path.join(this.kb_dir, 'pdf-extraction-report.json');
+    if (fs.existsSync(pdfReportPath)) {
+      const pdfReport = JSON.parse(fs.readFileSync(pdfReportPath, 'utf8'));
+      if (pdfReport.files) {
+        for (const file of pdfReport.files) {
+          if (file.status === 'success' && file.output && fs.existsSync(file.output)) {
+            files.push({
+              path: file.output,
+              title: file.filename || path.basename(file.output),
+              type: 'local_pdf',
+              tags: ['pdf-extracted'],
+              source: file
+            });
+          }
         }
       }
-      // Use transcript files for videos
-      else if (item.file_type === 'video') {
-        if (item.transcript_file && fs.existsSync(path.join(this.kb_dir, item.transcript_file))) {
-          files.push({
-            path: path.join(this.kb_dir, item.transcript_file),
-            title: item.title,
-            type: 'local_video',
-            tags: item.tags || [],
-            source: item
-          });
+    }
+
+    // Load video transcription report
+    const videoReportPath = path.join(this.kb_dir, 'video-transcription-report-FINAL.json');
+    if (fs.existsSync(videoReportPath)) {
+      const videoReport = JSON.parse(fs.readFileSync(videoReportPath, 'utf8'));
+      if (videoReport.files) {
+        for (const file of videoReport.files) {
+          if (file.status === 'success' && file.transcript_path && fs.existsSync(file.transcript_path)) {
+            files.push({
+              path: file.transcript_path,
+              title: file.filename || path.basename(file.transcript_path),
+              type: 'local_video',
+              tags: ['video-transcript'],
+              source: file
+            });
+          }
         }
       }
-      // Include markdown files
-      else if (item.file_type === 'markdown' || item.file_path?.endsWith('.md')) {
-        if (item.file_path && fs.existsSync(path.join(this.kb_dir, item.file_path))) {
+    }
+
+    // Load markdown files from inventory
+    const inventory = this.loadInventory();
+    const items = inventory.files || inventory;
+    for (const item of items) {
+      if (item.type === 'markdown' || item.path?.endsWith('.md')) {
+        if (fs.existsSync(item.path)) {
           files.push({
-            path: path.join(this.kb_dir, item.file_path),
-            title: item.title,
+            path: item.path,
+            title: item.filename || path.basename(item.path),
             type: 'local_markdown',
-            tags: item.tags || [],
+            tags: item.category ? [item.category] : [],
             source: item
           });
         }

@@ -1,0 +1,21 @@
+{
+  "name": "@openclaw/logging",
+  "version": "1.0.0",
+  "description": "Centralized logging infrastructure for OpenClaw agent ecosystem",
+  "main": "logger.js",
+  "scripts": {
+    "ingest": "node ingest.js",
+    "rotate": "node rotate.js",
+    "view": "node viewer.js",
+    "test": "node test.js"
+  },
+  "keywords": ["logging", "observability", "structured-logs"],
+  "author": "Marcus Rawlins (Opus)",
+  "dependencies": {},
+  "peerDependencies": {
+    "better-sqlite3": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

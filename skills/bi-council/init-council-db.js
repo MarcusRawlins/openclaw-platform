@@ -18,7 +18,7 @@ function initCouncilDB() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS council_sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      session_date TEXT UNIQUE,
+      session_date TEXT,
       run_at TEXT DEFAULT CURRENT_TIMESTAMP,
       status TEXT DEFAULT 'pending',
       error_message TEXT,

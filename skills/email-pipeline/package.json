@@ -1,0 +1,18 @@
+{
+  "name": "email-pipeline",
+  "version": "1.0.0",
+  "description": "Automated inbound email monitoring, scoring, classification, and response drafting",
+  "main": "monitor.js",
+  "scripts": {
+    "poll": "node monitor.js --poll",
+    "stats": "node monitor.js --stats",
+    "rescore": "node scorer.js --rescore",
+    "init": "node db.js --init"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

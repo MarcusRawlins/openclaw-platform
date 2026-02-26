@@ -1,0 +1,83 @@
+{
+  "database": {
+    "path": "/Volumes/reeseai-memory/data/email-pipeline/pipeline.db"
+  },
+  "accounts": [
+    {
+      "id": "photography",
+      "email": "hello@bythereeses.com",
+      "provider": "imap",
+      "credentials_env": "PHOTOGRAPHY_EMAIL_PASSWORD",
+      "features": {
+        "scoring": true,
+        "labels": true,
+        "stage_tracking": true,
+        "draft_generation": true,
+        "escalation": true,
+        "auto_archive_spam": true
+      },
+      "folders": ["INBOX"],
+      "poll_interval_minutes": 10
+    },
+    {
+      "id": "personal",
+      "email": "jtyler.reese@gmail.com",
+      "provider": "gmail_api",
+      "credentials_env": "GMAIL_OAUTH_TOKEN",
+      "features": {
+        "scoring": true,
+        "labels": true,
+        "stage_tracking": false,
+        "draft_generation": false,
+        "escalation": true,
+        "auto_archive_spam": true
+      },
+      "folders": ["INBOX"],
+      "poll_interval_minutes": 10
+    },
+    {
+      "id": "rehive",
+      "email": "hello@getrehive.com",
+      "provider": "imap",
+      "credentials_env": "REHIVE_EMAIL_PASSWORD",
+      "features": {
+        "scoring": true,
+        "labels": true,
+        "stage_tracking": true,
+        "draft_generation": true,
+        "escalation": true,
+        "auto_archive_spam": true
+      },
+      "folders": ["INBOX"],
+      "poll_interval_minutes": 10
+    }
+  ],
+  "polling": {
+    "default_interval_minutes": 10,
+    "backfill_days": 90,
+    "max_emails_per_poll": 50
+  },
+  "quarantine": {
+    "scanner_model": "lmstudio/qwen/qwen3-4b-2507",
+    "fail_closed": true,
+    "hold_timeout_hours": 24
+  },
+  "scoring": {
+    "model": "lmstudio/gemma-3-12b-it",
+    "rubric_path": "./rubric.md"
+  },
+  "drafting": {
+    "writer_model": "lmstudio/gemma-3-12b-it",
+    "reviewer_model": "lmstudio/qwen/qwen3-4b-2507",
+    "templates_dir": "./templates/"
+  },
+  "research": {
+    "cache_days": 30,
+    "fetch_timeout_ms": 5000,
+    "max_page_size_kb": 500
+  },
+  "escalation": {
+    "telegram_chat_id": "8172900205",
+    "crm_integration": "mission_control"
+  }
+}

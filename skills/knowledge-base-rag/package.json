@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
-    "sqlite3": "^5.1.7",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "sqlite-vec": "^0.1.6",
+    "sqlite3": "^5.1.7"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=16.0.0"
   },

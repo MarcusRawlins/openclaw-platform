@@ -48,6 +48,6 @@
   "defaults": {
     "tier": "medium",
     "llm_fallback": true,
-    "llm_model": "lmstudio/qwen2:4b"
+    "llm_model": "lmstudio/qwen3-4b-2507"
   }
 }

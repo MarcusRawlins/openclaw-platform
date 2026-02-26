@@ -150,7 +150,7 @@ class KnowledgeBaseManager {
 
     // Check database
     try {
-      const stats = this.db.getStats();
+      const stats = await this.db.getStats();
       checks.database = {
         status: stats.total_sources > 0 ? 'healthy' : 'empty',
         details: `${stats.total_sources} sources, ${stats.total_chunks} chunks`
@@ -172,25 +172,33 @@ class KnowledgeBaseManager {
 
     // Check data integrity
     try {
-      const sources = this.db.getAllSources();
+      const sources = await this.db.getAllSources();
       let orphanedChunks = 0;
       let missingChunks = 0;
 
-      for (const source of sources) {
-        const chunkCount = this.db.getChunkCount(source.id);
-        if (chunkCount === 0) {
-          missingChunks++;
+      if (sources && Array.isArray(sources)) {
+        for (const source of sources) {
+          const chunkCount = await this.db.getChunkCount(source.id);
+          if (chunkCount === 0) {
+            missingChunks++;
+          }
         }
-      }
 
-      const allChunksCount = this.db.db
-        .prepare('SELECT COUNT(*) as count FROM chunks')
-        .get().count;
-      const associatedChunks = sources.reduce(
-        (sum, s) => sum + this.db.getChunkCount(s.id),
-        0
-      );
-      orphanedChunks = allChunksCount - associatedChunks;
+        // Count total chunks in DB
+        let allChunksTotal = 0;
+        for (const source of sources) {
+          const count = await this.db.getChunkCount(source.id);
+          allChunksTotal += count || 0;
+        }
+
+        let associatedChunks = 0;
+        for (const source of sources) {
+          const count = await this.db.getChunkCount(source.id);
+          associatedChunks += count || 0;
+        }
+
+        orphanedChunks = allChunksTotal - associatedChunks;
+      }
 
       checks.data_integrity = {
         status: orphanedChunks === 0 && missingChunks === 0 ? 'healthy' : 'issues_found',

@@ -1,4 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
+const sqliteVec = require('sqlite-vec');
 const path = require('path');
 const fs = require('fs');
 const config = require('./config.json');
@@ -43,6 +44,13 @@ class KnowledgeBaseDB {
 
     this.db = new sqlite3.Database(DB_PATH);
     this.db.configure('busyTimeout', 10000);
+    
+    // Load sqlite-vec extension
+    try {
+      sqliteVec.load(this.db);
+    } catch (err) {
+      console.warn('Warning: Could not load sqlite-vec extension:', err.message);
+    }
   }
 
   async initialize() {
@@ -215,13 +223,64 @@ class KnowledgeBaseDB {
     );
   }
 
+  // Vector similarity search using sqlite-vec
+  async searchByVector(queryEmbedding, limit = 10) {
+    try {
+      // Use vec_distance_cosine for cosine similarity
+      // Lower distance = higher similarity
+      return await allAsync(
+        this.db,
+        `
+        SELECT c.*, s.title, s.source_type, s.url, s.file_path,
+               vec_distance_cosine(c.embedding, vec(?)) as distance,
+               (1 - vec_distance_cosine(c.embedding, vec(?))) as similarity
+        FROM chunks c
+        JOIN sources s ON c.source_id = s.id
+        ORDER BY distance ASC
+        LIMIT ?
+      `,
+        [queryEmbedding, queryEmbedding, limit]
+      );
+    } catch (err) {
+      console.error('Vector search failed:', err.message);
+      // Fallback to text search
+      return await this.searchByContent('', limit);
+    }
+  }
+
+  // Hybrid search (vector + keyword)
+  async searchHybrid(queryEmbedding, queryText, limit = 10) {
+    try {
+      // Combine vector similarity with text relevance
+      const searchTerm = `%${queryText}%`;
+      return await allAsync(
+        this.db,
+        `
+        SELECT c.*, s.title, s.source_type, s.url, s.file_path,
+               vec_distance_cosine(c.embedding, vec(?)) as vector_distance,
+               (1 - vec_distance_cosine(c.embedding, vec(?))) as vector_similarity,
+               CASE WHEN c.text LIKE ? OR s.title LIKE ? THEN 0.2 ELSE 0 END as text_match
+        FROM chunks c
+        JOIN sources s ON c.source_id = s.id
+        ORDER BY (vector_distance * 0.7 - text_match) ASC
+        LIMIT ?
+      `,
+        [queryEmbedding, queryEmbedding, searchTerm, searchTerm, limit]
+      );
+    } catch (err) {
+      console.error('Hybrid search failed:', err.message);
+      // Fallback to vector search only
+      return await this.searchByVector(queryEmbedding, limit);
+    }
+  }
+
   // Ingestion log operations
   async logIngestionStart(sourceId) {
     const result = await runAsync(
       this.db,
       `
-      INSERT INTO ingestion_log (source_id, status, started_at)
-      VALUES (?, 'pending', CURRENT_TIMESTAMP)
+      INSERT INTO ingestion_log (source_id, started_at)
+      VALUES (?, CURRENT_TIMESTAMP)
     `,
       [sourceId]
     );

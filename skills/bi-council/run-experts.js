@@ -20,9 +20,10 @@ async function runExperts() {
   }
 
   const db = new Database(COUNCIL_DB);
+  // Use timestamp instead of date to allow multiple runs per day
   const sessionId = db.prepare(`
-    INSERT INTO council_sessions (session_date, status)
-    VALUES (date('now'), 'running')
+    INSERT INTO council_sessions (session_date, run_at, status)
+    VALUES (date('now'), datetime('now'), 'running')
   `).run().lastInsertRowid;
 
   console.log(`  Session ID: ${sessionId}`);

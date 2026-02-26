@@ -9,15 +9,13 @@ import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 
-interface RouteParams {
-  params: {
-    platform: string;
-  };
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ platform: string }> }
+) {
+  let platform = '';
   try {
-    const { platform } = params;
+    platform = (await params).platform;
 
     // Verify platform has a connection
     const connection = await prisma.platformConnection.findUnique({
@@ -119,7 +117,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       data: metrics,
     });
   } catch (error) {
-    console.error(`Failed to fetch metrics for ${params.platform}:`, error);
+    console.error(`Failed to fetch metrics for ${platform}:`, error);
     return NextResponse.json(
       {
         success: false,
