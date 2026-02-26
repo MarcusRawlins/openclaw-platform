@@ -1,0 +1,47 @@
+{
+  "database": {
+    "path": "/Volumes/reeseai-memory/data/crm-engine/crm.db"
+  },
+  "discovery": {
+    "auto_add_enabled": false,
+    "auto_add_threshold": 50,
+    "scan_accounts": ["marcus-work", "marcus-personal"],
+    "skip_domains": ["noreply.github.com", "notifications.google.com"],
+    "max_meeting_attendees": 10,
+    "noreply_patterns": ["noreply@", "no-reply@", "donotreply@"]
+  },
+  "scoring": {
+    "model": "lmstudio/mistralai/devstral-small-2-2512",
+    "recalculate_interval_hours": 24,
+    "weights": {
+      "recency": 0.30,
+      "frequency": 0.25,
+      "priority": 0.20,
+      "depth": 0.15,
+      "reciprocity": 0.10
+    }
+  },
+  "profiler": {
+    "model": "lmstudio/mistralai/devstral-small-2-2512",
+    "update_interval_days": 7
+  },
+  "nudges": {
+    "dormant_threshold_days": 30,
+    "score_decay_alert": 20
+  },
+  "drafts": {
+    "enabled": false,
+    "writer_model": "lmstudio/mistralai/devstral-small-2-2512",
+    "reviewer_model": "lmstudio/qwen/qwen3-4b-2507"
+  },
+  "embeddings": {
+    "model": "lmstudio/nomic-embed-text-v1.5",
+    "dimensions": 768
+  },
+  "escalation": {
+    "telegram_chat_id": "8172900205"
+  },
+  "email_pipeline": {
+    "database_path": "/Volumes/reeseai-memory/data/email-pipeline/pipeline.db"
+  }
+}

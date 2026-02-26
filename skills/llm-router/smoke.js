@@ -37,7 +37,7 @@ function getCanaryModel(provider) {
     anthropic: 'claude-haiku-4-5',             // cheapest
     openai: 'gpt-4o-mini',                      // cheapest
     google: 'gemini-2.0-flash',                  // cheapest
-    lmstudio: 'qwen/qwen3-4b-2507'              // already loaded
+    lmstudio: 'gemma-3-12b-it'                   // reliable fallback
   };
   return canaryModels[provider] || null;
 }

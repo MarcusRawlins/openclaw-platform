@@ -74,24 +74,59 @@ function parseHimalayaList(output) {
 // Fetch full email using himalaya
 function fetchEmail(accountConfig, uid) {
   try {
-    const cmd = `himalaya -a ${accountConfig.email} read ${uid} --format json`;
+    const cmd = `himalaya message read --account ${accountConfig.id} --preview ${uid}`;
     const output = execSync(cmd, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
-    const emailData = JSON.parse(output);
+
+    // himalaya v1.2.0 returns raw email text with headers
+    // Parse headers and body from the raw output
+    const lines = output.split('\n');
+    const headers = {};
+    let bodyStart = 0;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.trim() === '') {
+        bodyStart = i + 1;
+        break;
+      }
+      const headerMatch = line.match(/^([^:]+):\s*(.+)$/);
+      if (headerMatch) {
+        headers[headerMatch[1].toLowerCase()] = headerMatch[2].trim();
+      }
+    }
+    
+    const bodyText = lines.slice(bodyStart).join('\n').trim();
+    
+    // Parse From header: "Name <email>" or just "email"
+    let fromEmail = 'unknown';
+    let fromName = null;
+    const fromHeader = headers['from'] || '';
+    const fromMatch = fromHeader.match(/(?:"?([^"<]*)"?\s*)?<?([^>]+@[^>]+)>?/);
+    if (fromMatch) {
+      fromName = fromMatch[1]?.trim() || null;
+      fromEmail = fromMatch[2]?.trim() || 'unknown';
+    }
+    
+    // Parse To header
+    let toEmail = accountConfig.email;
+    const toHeader = headers['to'] || '';
+    const toMatch = toHeader.match(/<?([^>]+@[^>]+)>?/);
+    if (toMatch) toEmail = toMatch[1].trim();
 
     return {
-      message_id: emailData.message_id || `${accountConfig.id}-${uid}`,
-      thread_id: emailData.thread_id || emailData.in_reply_to || null,
-      from_email: emailData.from?.email || 'unknown',
-      from_name: emailData.from?.name || null,
-      from_domain: emailData.from?.email?.split('@')[1] || null,
-      to_email: emailData.to?.[0]?.email || accountConfig.email,
-      subject: emailData.subject || '(no subject)',
-      body_html: emailData.body_html || '',
-      body_text: emailData.body_text || emailData.body || '',
-      received_at: emailData.date || new Date().toISOString(),
-      is_reply: !!emailData.in_reply_to,
-      in_reply_to: emailData.in_reply_to || null,
-      attachments: emailData.attachments || []
+      message_id: headers['message-id'] || `${accountConfig.id}-${uid}`,
+      thread_id: headers['in-reply-to'] || null,
+      from_email: fromEmail,
+      from_name: fromName,
+      from_domain: fromEmail.split('@')[1] || null,
+      to_email: toEmail,
+      subject: headers['subject'] || '(no subject)',
+      body_html: '',
+      body_text: bodyText,
+      received_at: headers['date'] || new Date().toISOString(),
+      is_reply: !!headers['in-reply-to'],
+      in_reply_to: headers['in-reply-to'] || null,
+      attachments: []
     };
 
   } catch (error) {
@@ -110,7 +145,7 @@ async function backfillDomain(accountConfig, domain) {
     const sinceStr = since.toISOString().split('T')[0];
     
     // Search for emails from this domain in the last 90 days
-    const searchCmd = `himalaya -a ${accountConfig.email} search "from:${domain}" --folder INBOX`;
+    const searchCmd = `himalaya envelope list --account ${accountConfig.id} --folder INBOX`;
     
     try {
       const output = execSync(searchCmd, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
@@ -155,7 +190,7 @@ async function pollAccount(accountConfig) {
     const lastSeenUid = pollState?.last_seen_uid || '0';
 
     // List new emails using himalaya (try JSON format first)
-    let cmd = `himalaya -a ${accountConfig.email} list --folder INBOX --format json`;
+    let cmd = `himalaya envelope list --account ${accountConfig.id} --folder INBOX -o json`;
     let output;
     
     try {
@@ -163,7 +198,7 @@ async function pollAccount(accountConfig) {
     } catch (jsonError) {
       // Fallback to text format if JSON not supported
       logger.warn('monitor.json_format_unsupported', { account: accountConfig.id });
-      cmd = `himalaya -a ${accountConfig.email} list --folder INBOX --max-width 200`;
+      cmd = `himalaya envelope list --account ${accountConfig.id} --folder INBOX`;
       output = execSync(cmd, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
     }
     

@@ -1,0 +1,17 @@
+{
+  "name": "crm-engine",
+  "version": "1.0.0",
+  "description": "Personal CRM Engine - Headless contact management with relationship scoring",
+  "main": "api.js",
+  "scripts": {
+    "verify": "node verify.js",
+    "sync": "node sync.js --run",
+    "query": "node query.js"
+  },
+  "keywords": ["crm", "contacts", "relationships", "sqlite"],
+  "author": "Marcus Rawlins",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.8.1"
+  }
+}

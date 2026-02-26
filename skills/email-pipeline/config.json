@@ -42,7 +42,7 @@
     "max_emails_per_poll": 50
   },
   "quarantine": {
-    "scanner_model": "lmstudio/qwen/qwen3-4b-2507",
+    "scanner_model": "lmstudio/gemma-3-12b-it",
     "fail_closed": true,
     "hold_timeout_hours": 24
   },
