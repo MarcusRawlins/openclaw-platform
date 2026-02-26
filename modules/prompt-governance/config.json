@@ -1,0 +1,98 @@
+{
+  "primary_user_id": "marcus",
+  "primary_user_telegram_id": "474907835",
+  
+  "file_scopes": {
+    "AGENTS.md": "always",
+    "SOUL.md": "always",
+    "IDENTITY.md": "always",
+    "USER.md": "always",
+    "TOOLS.md": "always",
+    "MEMORY.md": "private_only",
+    "HEARTBEAT.md": "heartbeat_only",
+    "memory/": "private_only"
+  },
+
+  "data_classification": {
+    "confidential": {
+      "description": "Private/DM only. Never in group chats or external channels.",
+      "examples": [
+        "Financial figures, revenue, costs, deal values",
+        "CRM contact details (personal emails, phone numbers)",
+        "Daily notes (contain personal context)",
+        "MEMORY.md contents",
+        "API keys, credentials, tokens",
+        "Personal email addresses",
+        "Client-specific deal information"
+      ],
+      "scope": "private_only"
+    },
+    
+    "internal": {
+      "description": "Group chats OK, no external sharing without approval.",
+      "examples": [
+        "Strategic notes and analysis",
+        "Tool results and task data",
+        "System health info",
+        "Architecture decisions",
+        "Agent performance data",
+        "Work email addresses (company domains)",
+        "Project status and progress"
+      ],
+      "scope": "group_ok"
+    },
+    
+    "restricted": {
+      "description": "External only with explicit approval.",
+      "examples": [
+        "General knowledge responses",
+        "Public-facing content (blog posts, social captions)",
+        "Documentation meant for sharing"
+      ],
+      "scope": "external_with_approval"
+    }
+  },
+
+  "redaction_rules": {
+    "always_redact": [
+      "API keys and tokens",
+      "Passwords and credentials",
+      "OAuth tokens",
+      "JWT tokens"
+    ],
+    
+    "redact_in_public": [
+      "Personal email addresses (gmail, yahoo, etc.)",
+      "Phone numbers",
+      "SSN",
+      "Credit card numbers",
+      "Physical addresses",
+      "Dollar amounts and financial figures"
+    ],
+    
+    "allow_in_public": [
+      "Work email addresses (bythereeses.com, getrehive.com, anselai.com)",
+      "Public social media handles",
+      "Company names and brands"
+    ]
+  },
+
+  "token_budgets": {
+    "auto_loaded_files": {
+      "AGENTS.md": 50,
+      "SOUL.md": 30,
+      "IDENTITY.md": 5,
+      "USER.md": 15,
+      "TOOLS.md": 20
+    },
+    "total_target": 2000,
+    "description": "Target line counts for auto-loaded files. Audit warns if exceeded by >20%."
+  },
+
+  "governance_rules": {
+    "no_duplication": "Rules in AGENTS.md should be referenced, not copied to other files",
+    "tools_ids_only": "TOOLS.md contains IDs/paths/env vars, not documentation",
+    "memory_learned_only": "MEMORY.md stores learned patterns, not restated rules",
+    "token_budget_test": "Every line in auto-loaded files must justify existence on EVERY turn"
+  }
+}
