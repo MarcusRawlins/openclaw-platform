@@ -30,13 +30,13 @@ try {
 }
 
 function getRubricVersion() {
-  const rubricPath = CONFIG.scoring.rubric_path;
+  const rubricPath = path.resolve(__dirname, CONFIG.scoring.rubric_path);
   const rubricText = fs.readFileSync(rubricPath, 'utf-8');
   return crypto.createHash('sha256').update(rubricText).digest('hex').substring(0, 16);
 }
 
 function getRubricText() {
-  const rubricPath = CONFIG.scoring.rubric_path;
+  const rubricPath = path.resolve(__dirname, CONFIG.scoring.rubric_path);
   return fs.readFileSync(rubricPath, 'utf-8');
 }
 

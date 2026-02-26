@@ -70,12 +70,11 @@ async function sendTelegramNotification(email) {
   try {
     const message = formatMessage(rule.message_template, email);
     
-    // Send actual Telegram notification using execSync
-    const { execSync } = require('child_process');
-    const escapedMessage = message.replace(/"/g, '\\"').replace(/'/g, "\\'");
+    // Send actual Telegram notification using execFileSync (no shell interpolation)
+    const { execFileSync } = require('child_process');
     
     try {
-      execSync(`openclaw message send --text "${escapedMessage}"`, { 
+      execFileSync('openclaw', ['message', 'send', '--text', message], { 
         encoding: 'utf-8',
         timeout: 5000
       });

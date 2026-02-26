@@ -1,10 +1,20 @@
+const path = require('path');
 const { getDatabase } = require('./db');
+
+// Resolve skills directory (env var or default)
+const SKILLS_DIR = process.env.OPENCLAW_SKILLS_PATH || 
+                   path.join(process.env.HOME, '.openclaw/workspace/skills');
 
 let logger;
 try {
-  logger = require('/Users/marcusrawlins/.openclaw/workspace/skills/logging/logger');
+  const Logger = require(path.join(SKILLS_DIR, 'logging/logger'));
+  logger = Logger.getInstance();
 } catch (e) {
-  logger = { log: console.log, error: console.error };
+  logger = { 
+    info: (event, data) => console.log(`[${event}]`, data),
+    error: (event, data) => console.error(`[${event}]`, data),
+    warn: (event, data) => console.warn(`[${event}]`, data)
+  };
 }
 
 // Generate score label (set once, immutable)
@@ -26,7 +36,7 @@ function applyScoreLabel(db, emailId) {
   }
 
   if (email.score_label) {
-    logger.log(`Email ${emailId} already has score label: ${email.score_label}`);
+    logger.info('labeler.score_label_exists', { email_id: emailId, score_label: email.score_label });
     return email.score_label;
   }
 
@@ -34,7 +44,7 @@ function applyScoreLabel(db, emailId) {
   
   db.prepare('UPDATE emails SET score_label = ? WHERE id = ?').run(scoreLabel, emailId);
   
-  logger.log(`Applied score label to email ${emailId}: ${scoreLabel}`);
+  logger.info('labeler.score_label_applied', { email_id: emailId, score_label: scoreLabel });
   
   return scoreLabel;
 }
@@ -51,7 +61,11 @@ function applyStageLabel(db, emailId, stageLabel) {
   
   db.prepare('UPDATE emails SET stage_label = ? WHERE id = ?').run(stageLabel, emailId);
   
-  logger.log(`Updated stage label for email ${emailId}: ${oldStageLabel} → ${stageLabel}`);
+  logger.info('labeler.stage_label_updated', { 
+    email_id: emailId, 
+    old_stage_label: oldStageLabel, 
+    new_stage_label: stageLabel 
+  });
   
   return stageLabel;
 }
@@ -65,7 +79,11 @@ function initializeStageLabel(db, emailId) {
   }
 
   if (email.classification !== 'lead') {
-    logger.log(`Email ${emailId} is not a lead, skipping stage initialization`);
+    logger.info('labeler.stage_init_skipped', { 
+      email_id: emailId, 
+      reason: 'not a lead', 
+      classification: email.classification 
+    });
     return null;
   }
 
