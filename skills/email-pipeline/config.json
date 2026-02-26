@@ -4,10 +4,10 @@
   },
   "accounts": [
     {
-      "id": "photography",
-      "email": "hello@bythereeses.com",
+      "id": "marcus-work",
+      "email": "marcus@marcusrawlins.com",
       "provider": "imap",
-      "credentials_env": "PHOTOGRAPHY_EMAIL_PASSWORD",
+      "credentials_env": "MARCUS_WORK_EMAIL_PASSWORD",
       "features": {
         "scoring": true,
         "labels": true,
@@ -20,26 +20,10 @@
       "poll_interval_minutes": 10
     },
     {
-      "id": "personal",
-      "email": "jtyler.reese@gmail.com",
-      "provider": "gmail_api",
-      "credentials_env": "GMAIL_OAUTH_TOKEN",
-      "features": {
-        "scoring": true,
-        "labels": true,
-        "stage_tracking": false,
-        "draft_generation": false,
-        "escalation": true,
-        "auto_archive_spam": true
-      },
-      "folders": ["INBOX"],
-      "poll_interval_minutes": 10
-    },
-    {
-      "id": "rehive",
-      "email": "hello@getrehive.com",
+      "id": "marcus-personal",
+      "email": "marcusvrawlins@gmail.com",
       "provider": "imap",
-      "credentials_env": "REHIVE_EMAIL_PASSWORD",
+      "credentials_env": "MARCUS_GMAIL_PASSWORD",
       "features": {
         "scoring": true,
         "labels": true,
