@@ -5,55 +5,32 @@
 ## Codebase
 
 - **Location:** `mission_control/`
-- **Origin:** Forked from jwtidwell/mission_control
 - **Stack:** Next.js 15, React 19, Tailwind 4, TypeScript 5
 - **Port:** 3100
-- **Data:** Local JSON files + WebSocket to OpenClaw gateway
+- **Data:** Local JSON files + WebSocket to OpenClaw gateway on port 18789
+- **Service:** Managed by LaunchD (see MISSION-CONTROL-SERVICE.md)
 
-## Architecture Decisions
+## Architecture Spec
 
-- **Build from Jeff's codebase.** Don't rewrite from scratch.
-- **Keep the architecture, reshape the content.** The scaffolding scales for growth.
-- **Features we're keeping:** Blueprint view, agent expressions, templates, whiteboard, cron management, gateway integration, auth, CRUD patterns
-- **Only stripping:** Demo data and agent-specific content we'll replace
+**The canonical spec is:** `docs/MISSION-CONTROL-REBUILD.md`
 
-## Development Process
+All build work follows that document. Phase specs are in `docs/mc-phases/`. Do not create competing specs. If something needs to change, update the canonical spec.
 
-1. **Branch:** Always work on a feature branch
-2. **Scope:** One panel/feature per branch
-3. **Test locally:** `npm run dev` on port 3100
-4. **Review:** Brunel builds, Marcus reviews, Tyler approves
-5. **Merge:** Only after review passes
+## Development Rules
 
-## Panel Architecture
+1. Feature branches only. Never push to main. Branch naming: `mc/phase-X-description`
+2. `bun run build` must succeed before submitting for review
+3. Use existing CSS variables: `var(--bg-primary)`, `var(--bg-card)`, `var(--bg-secondary)`, `var(--border)`, `var(--text-primary)`, `var(--text-muted)`, `var(--accent)`
+4. No hardcoded colors. No inline styles for colors.
+5. No new dependencies without Marcus's approval
+6. Test in browser before submitting. Click the UI. Verify API routes with curl.
+7. No mock data in production views. Empty states are fine.
+8. Commit after each sub-task, not one giant commit per phase.
 
-Mission Control is organized into panels. Each panel is:
-- A self-contained React component
-- Responsible for its own data fetching
-- Consistent with the existing modal/card patterns
+## Gateway Integration
 
-### Planned Panels
-
-| Panel | Domain | Data Source |
-|-------|--------|------------|
-| Agent Status | AI operations | Gateway WebSocket |
-| Photography Pipeline | Wedding business | TBD (CRM/calendar) |
-| Financial Overview | Revenue tracking | TBD (financials DB) |
-| Client CRM | Relationships | TBD (CRM DB) |
-| Content Analytics | Social performance | TBD (social tracker) |
-| Cron Health | System reliability | Gateway cron API |
-
-## Code Standards
-
-- **TypeScript** for all new code
-- **Components:** One component per file, named exports
-- **Styles:** Tailwind classes, no inline CSS (except CSS variables from the existing codebase)
-- **State:** React hooks, minimize prop drilling
-- **API routes:** Thin proxy layer, business logic in `lib/`
-
-## Anti-Patterns
-
-- ❌ Adding external dependencies without checking if Tailwind/existing libs cover it
-- ❌ Building custom components when the existing modal/card system works
-- ❌ Hardcoding data that should come from the gateway or a database
-- ❌ Large monolithic components (decompose at ~200 lines)
+- Gateway URL: `ws://{hostname}:18789`
+- Gateway token: stored in settings (not hardcoded)
+- All agent paths use `~/.openclaw/` (never `clawd/`)
+- Workspace: `/Users/marcusrawlins/.openclaw/workspace`
+- Agent configs: `/Users/marcusrawlins/.openclaw/agents/`

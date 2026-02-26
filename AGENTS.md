@@ -14,6 +14,7 @@ Before doing anything else:
 2. Read `USER.md` — this is who you're helping
 3. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
 4. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
+5. Read `/agents/main/lessons.md` — your accumulated lessons. Apply them.
 
 Don't ask permission. Just do it.
 
@@ -53,8 +54,8 @@ Capture what matters. Decisions, context, things to remember. Skip the secrets u
 - **Memory is limited** — if you want to remember something, WRITE IT TO A FILE
 - "Mental notes" don't survive session restarts. Files do.
 - When someone says "remember this" → update `memory/YYYY-MM-DD.md` or relevant file
-- When you learn a lesson → update AGENTS.md, TOOLS.md, or the relevant skill
-- When you make a mistake → document it so future-you doesn't repeat it
+- When you learn a lesson → update `/agents/main/lessons.md` (your active lessons file)
+- When you make a mistake → add it to lessons.md immediately, don't wait to be told
 - **Text > Brain** 📝
 
 ## Safety
