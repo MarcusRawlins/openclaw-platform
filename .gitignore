@@ -1,0 +1,16 @@
+node_modules/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+*.jsonl
+.migration-status.json
+.last-sync
+archive/
+logs/
+BUILD-COMPLETE.md
+VERIFICATION.md
+COMPLETION-CHECKLIST.md
+BUILD-REPORT.md
+.DS_Store

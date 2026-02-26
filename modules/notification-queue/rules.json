@@ -1,0 +1,53 @@
+{
+  "rules": [
+    {
+      "tier": "critical",
+      "priority": 100,
+      "patterns": [
+        "system error",
+        "CRITICAL",
+        "security alert",
+        "build failed.*urgent",
+        "interactive prompt",
+        "requires.*input",
+        "action required",
+        "fatal",
+        "crash"
+      ],
+      "description": "System errors, security issues, user input needed"
+    },
+    {
+      "tier": "high",
+      "priority": 50,
+      "patterns": [
+        "task completed.*urgent",
+        "task completed.*high",
+        "review.*needs_revision",
+        "sync failed",
+        "job failed",
+        "council.*digest",
+        "briefing.*ready",
+        "failed to"
+      ],
+      "description": "Important completions, failures, council/briefing output"
+    },
+    {
+      "tier": "medium",
+      "priority": 0,
+      "patterns": [
+        "task completed",
+        "maintenance.*complete",
+        "standing order",
+        "lead research",
+        "content.*created",
+        "routine.*update"
+      ],
+      "description": "Routine completions, standing orders, content creation"
+    }
+  ],
+  "defaults": {
+    "tier": "medium",
+    "llm_fallback": true,
+    "llm_model": "lmstudio/qwen3-4b-2507"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "knowledge-base-rag",
+  "version": "1.0.0",
+  "description": "Local RAG system for knowledge base with SQLite and LM Studio embeddings",
+  "main": "ingest.js",
+  "scripts": {
+    "ingest": "node ingest.js",
+    "migrate": "node migrate.js",
+    "query": "node query.js",
+    "manage": "node manage.js",
+    "health-check": "node manage.js health-check",
+    "stats": "node manage.js stats",
+    "list": "node manage.js list"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "^2.7.0",
+    "sqlite-vec": "^0.1.6",
+    "sqlite3": "^5.1.7"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "rag",
+    "retrieval-augmented-generation",
+    "embeddings",
+    "knowledge-base",
+    "semantic-search"
+  ],
+  "author": "Reese AI",
+  "license": "MIT"
+}

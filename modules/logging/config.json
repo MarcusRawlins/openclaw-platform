@@ -1,0 +1,26 @@
+{
+  "log_dir": "/Volumes/reeseai-memory/data/logs",
+  "db_path": "/Volumes/reeseai-memory/data/logs/logs.db",
+  "min_level": "info",
+  "buffer_size": 20,
+  "flush_interval_ms": 3000,
+  "rotation": {
+    "max_size_mb": 50,
+    "keep_recent": 3,
+    "db_retention_days": 90,
+    "archive_compression": true
+  },
+  "raw_log_sources": [
+    {
+      "name": "gateway",
+      "glob": "/Users/marcusrawlins/.openclaw/logs/*.log"
+    },
+    {
+      "name": "lmstudio",
+      "glob": "/Users/marcusrawlins/.cache/lm-studio/logs/*.log"
+    }
+  ],
+  "redaction": {
+    "enabled": true
+  }
+}

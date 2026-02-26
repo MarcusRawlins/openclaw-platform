@@ -1,0 +1,30 @@
+{
+  "database": {
+    "path": "/Volumes/reeseai-memory/data/knowledge-base/kb-rag.db"
+  },
+  "embeddings": {
+    "provider": "lm-studio",
+    "model": "nomic-embed-text",
+    "url": "http://127.0.0.1:1234/v1",
+    "dimension": 768
+  },
+  "chunking": {
+    "chunk_size": 512,
+    "chunk_overlap": 50,
+    "max_chunk_size": 1000
+  },
+  "security": {
+    "allowed_schemes": ["http", "https"],
+    "url_timeout_ms": 30000,
+    "max_content_size_mb": 50,
+    "max_chunks_per_source": 500
+  },
+  "ingestion": {
+    "lock_file": "/tmp/kb-rag.lock",
+    "lock_timeout_ms": 300000,
+    "max_retries": 3
+  },
+  "sources": {
+    "knowledge_base_dir": "/Volumes/reeseai-memory/data/knowledge-base"
+  }
+}

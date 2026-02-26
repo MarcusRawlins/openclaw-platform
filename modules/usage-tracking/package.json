@@ -1,0 +1,26 @@
+{
+  "name": "usage-tracking",
+  "version": "1.0.0",
+  "description": "LLM usage and cost tracking system for OpenClaw",
+  "main": "logger.js",
+  "scripts": {
+    "test": "node test.js",
+    "init": "node -e 'require(\"./db\").init()'",
+    "dashboard": "node dashboard.js",
+    "report": "node report.js",
+    "archive": "node archive.js",
+    "sync": "node gateway-sync.js"
+  },
+  "keywords": [
+    "llm",
+    "usage",
+    "cost",
+    "tracking",
+    "openclaw"
+  ],
+  "author": "Marcus Rawlins",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.0.0"
+  }
+}

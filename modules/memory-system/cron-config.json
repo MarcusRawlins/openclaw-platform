@@ -1,0 +1,138 @@
+[
+  {
+    "id": "memory-synthesis-main",
+    "name": "Memory: Weekly Synthesis (Marcus)",
+    "description": "Run weekly synthesis for Marcus's long-term memory (MEMORY.md). Reads past 7 days of daily notes, uses local LLM to extract patterns, updates curated memory.",
+    "schedule": {
+      "kind": "cron",
+      "expression": "0 3 * * 0",
+      "timezone": "America/New_York",
+      "description": "Sunday at 3:00 AM EST"
+    },
+    "command": "node /Users/marcusrawlins/.openclaw/workspace/skills/memory-system/synthesize.js main",
+    "wrapper": "/Users/marcusrawlins/.openclaw/workspace/skills/cron-automation/run.sh",
+    "idempotency": "daily",
+    "timeout": 60,
+    "sessionTarget": "main",
+    "enabled": true
+  },
+  {
+    "id": "memory-synthesis-brunel",
+    "name": "Memory: Weekly Synthesis (Brunel)",
+    "description": "Run weekly synthesis for Brunel's memory system.",
+    "schedule": {
+      "kind": "cron",
+      "expression": "5 3 * * 0",
+      "timezone": "America/New_York",
+      "description": "Sunday at 3:05 AM EST"
+    },
+    "command": "node /Users/marcusrawlins/.openclaw/workspace/skills/memory-system/synthesize.js brunel",
+    "wrapper": "/Users/marcusrawlins/.openclaw/workspace/skills/cron-automation/run.sh",
+    "idempotency": "daily",
+    "timeout": 60,
+    "sessionTarget": "main",
+    "enabled": true
+  },
+  {
+    "id": "memory-synthesis-scout",
+    "name": "Memory: Weekly Synthesis (Scout)",
+    "description": "Run weekly synthesis for Scout's memory system.",
+    "schedule": {
+      "kind": "cron",
+      "expression": "10 3 * * 0",
+      "timezone": "America/New_York",
+      "description": "Sunday at 3:10 AM EST"
+    },
+    "command": "node /Users/marcusrawlins/.openclaw/workspace/skills/memory-system/synthesize.js scout",
+    "wrapper": "/Users/marcusrawlins/.openclaw/workspace/skills/cron-automation/run.sh",
+    "idempotency": "daily",
+    "timeout": 60,
+    "sessionTarget": "main",
+    "enabled": true
+  },
+  {
+    "id": "memory-synthesis-ada",
+    "name": "Memory: Weekly Synthesis (Ada)",
+    "description": "Run weekly synthesis for Ada's memory system.",
+    "schedule": {
+      "kind": "cron",
+      "expression": "15 3 * * 0",
+      "timezone": "America/New_York",
+      "description": "Sunday at 3:15 AM EST"
+    },
+    "command": "node /Users/marcusrawlins/.openclaw/workspace/skills/memory-system/synthesize.js ada",
+    "wrapper": "/Users/marcusrawlins/.openclaw/workspace/skills/cron-automation/run.sh",
+    "idempotency": "daily",
+    "timeout": 60,
+    "sessionTarget": "main",
+    "enabled": true
+  },
+  {
+    "id": "memory-synthesis-ed",
+    "name": "Memory: Weekly Synthesis (Ed)",
+    "description": "Run weekly synthesis for Ed's memory system.",
+    "schedule": {
+      "kind": "cron",
+      "expression": "20 3 * * 0",
+      "timezone": "America/New_York",
+      "description": "Sunday at 3:20 AM EST"
+    },
+    "command": "node /Users/marcusrawlins/.openclaw/workspace/skills/memory-system/synthesize.js ed",
+    "wrapper": "/Users/marcusrawlins/.openclaw/workspace/skills/cron-automation/run.sh",
+    "idempotency": "daily",
+    "timeout": 60,
+    "sessionTarget": "main",
+    "enabled": true
+  },
+  {
+    "id": "memory-synthesis-dewey",
+    "name": "Memory: Weekly Synthesis (Dewey)",
+    "description": "Run weekly synthesis for Dewey's memory system.",
+    "schedule": {
+      "kind": "cron",
+      "expression": "25 3 * * 0",
+      "timezone": "America/New_York",
+      "description": "Sunday at 3:25 AM EST"
+    },
+    "command": "node /Users/marcusrawlins/.openclaw/workspace/skills/memory-system/synthesize.js dewey",
+    "wrapper": "/Users/marcusrawlins/.openclaw/workspace/skills/cron-automation/run.sh",
+    "idempotency": "daily",
+    "timeout": 60,
+    "sessionTarget": "main",
+    "enabled": true
+  },
+  {
+    "id": "memory-synthesis-walt",
+    "name": "Memory: Weekly Synthesis (Walt)",
+    "description": "Run weekly synthesis for Walt's memory system.",
+    "schedule": {
+      "kind": "cron",
+      "expression": "30 3 * * 0",
+      "timezone": "America/New_York",
+      "description": "Sunday at 3:30 AM EST"
+    },
+    "command": "node /Users/marcusrawlins/.openclaw/workspace/skills/memory-system/synthesize.js walt",
+    "wrapper": "/Users/marcusrawlins/.openclaw/workspace/skills/cron-automation/run.sh",
+    "idempotency": "daily",
+    "timeout": 60,
+    "sessionTarget": "main",
+    "enabled": true
+  },
+  {
+    "id": "memory-archive-daily",
+    "name": "Memory: Daily Archive Check",
+    "description": "Check for and archive daily notes older than 30 days. Keeps workspace lean and boot fast.",
+    "schedule": {
+      "kind": "cron",
+      "expression": "0 6 * * *",
+      "timezone": "America/New_York",
+      "description": "Daily at 6:00 AM EST"
+    },
+    "command": "node -e \"require('/Users/marcusrawlins/.openclaw/workspace/skills/memory-system/daily-notes.js').forEach(a => new (require('/Users/marcusrawlins/.openclaw/workspace/skills/memory-system/daily-notes.js'))(a).archiveOldNotes(30))\" main brunel scout ada ed dewey walt",
+    "wrapper": "/Users/marcusrawlins/.openclaw/workspace/skills/cron-automation/run.sh",
+    "idempotency": "hourly",
+    "timeout": 30,
+    "sessionTarget": "main",
+    "enabled": true
+  }
+]
