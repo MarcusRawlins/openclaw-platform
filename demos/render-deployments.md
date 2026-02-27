@@ -8,7 +8,13 @@
 
 ## Deployment Status
 
+**BLOCKER (Feb 27, 2026):** Requires Render dashboard access with Tyler's credentials.
+
 All 4 demo sites are built, tested locally, and ready for Render deployment.
+
+**Action Required:** Tyler needs to either:
+1. Deploy these manually (15-20 min) using the instructions below, OR
+2. Provide Render API token so Brunel can deploy programmatically
 
 ### Demo Sites Deployment Checklist
 
