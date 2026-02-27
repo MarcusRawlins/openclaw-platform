@@ -1,1 +1,10 @@
-{"triggered": true, "requestedBy": "marcus", "timestamp": "2026-02-25T20:39:13Z"}
+{
+  "triggered": true,
+  "triggeredAt": "2026-02-27T02:30:56.291Z",
+  "pendingTasks": [
+    "f4697434-5364-4e7f-9083-23515a72bd66",
+    "28f77e7a-9175-4c6f-9cf4-362dae4536c6",
+    "5d50ce6f-2a0e-45e0-80e9-59a553c1d134",
+    "redeploy-render-demos"
+  ]
+}

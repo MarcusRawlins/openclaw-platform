@@ -231,3 +231,28 @@ All 7 engagement session blogs passed final review:
 7. Ellie & Maggie - South End Boston ✓ (R2)
 
 **Next nightly review:** 2026-02-27 1:00 AM
+
+---
+
+## 2026-02-27 (1:00 AM) — Nightly Learning Review
+
+**Reviews processed:** 12 files from 2026-02-26
+- Email pipeline R1 review (Walt → Brunel, NEEDS_REVISION)
+- Email pipeline R2 review (Walt → Brunel, PASS A+)
+- Infrastructure review batch 1-8 (Walt → Brunel, mixed)
+- Infrastructure fix re-review (Walt → Brunel, 3/3 PASS)
+- Council report (platform health 77%)
+
+**Lessons updated:**
+- **Brunel:** +9 new lessons (archived 4 oldest from 2026-02-22/23). Key themes: verify integration APIs before coding, use JSON CLI output, implement full spec, real integrations not placeholders, env vars for paths, macOS compatibility.
+- **Walt:** +2 new lessons. Batch review calibration consistency, re-review verification rigor.
+- **Shared:** +2 new lessons. Env var paths, retry with backoff for external services.
+- **Marcus:** +1 new lesson. Same-day build→review→fix→re-review velocity works well.
+
+**Patterns observed:**
+- Brunel's R2 turnaround was excellent — all 10 issues fixed thoroughly. Learning system working.
+- Walt handled massive review volume (12+ systems) with consistent quality.
+- Recurring theme: placeholder/stub code submitted as complete. Multiple lessons now reinforce "real integrations only."
+- macOS compatibility is a recurring gotcha (timeout, paths).
+
+**No critical issues requiring Tyler notification.**
