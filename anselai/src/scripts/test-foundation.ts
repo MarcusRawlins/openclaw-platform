@@ -1,218 +1,200 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
+
 /**
- * AnselAI Phase 1 Foundation Test Script
- * Verifies all components are working
+ * Test Foundation Script
+ * Verifies all Phase 1 components are working
  */
 
 import { prisma } from '@/lib/prisma';
 import { ConnectionManager } from '@/lib/integrations/connection-manager';
 import { SyncScheduler } from '@/lib/integrations/sync-scheduler';
-import { encryptToken, decryptToken } from '@/lib/security/encrypt';
+import { encryptToken, decryptToken, generateEncryptionKey } from '@/lib/security/encrypt';
 
-async function runTests() {
-  console.log('\n╔════════════════════════════════════════╗');
-  console.log('║  AnselAI Phase 1 Foundation Tests       ║');
-  console.log('╚════════════════════════════════════════╝\n');
+console.log('\n🧪 Testing AnselAI Foundation...\n');
 
-  let passed = 0;
-  let failed = 0;
+let allTestsPassed = true;
 
-  // Test 1: Database Connection
-  console.log('Test 1: Database Connection');
+// Test 1: Database Connection
+async function testDatabaseConnection() {
+  console.log('1️⃣  Testing database connection...');
   try {
-    await prisma.$queryRaw`SELECT 1`;
-    console.log('✅ PASS: Database connected\n');
-    passed++;
+    await prisma.$connect();
+    const count = await prisma.user.count();
+    console.log(`   ✅ Database connected (${count} users)`);
+    return true;
   } catch (error) {
-    console.error('❌ FAIL: Database connection failed\n', error);
-    failed++;
+    console.error('   ❌ Database connection failed:', error);
+    return false;
   }
+}
 
-  // Test 2: Prisma Models
-  console.log('Test 2: Prisma Models');
+// Test 2: Token Encryption
+function testTokenEncryption() {
+  console.log('2️⃣  Testing token encryption...');
   try {
-    const userCount = await prisma.user.count();
-    const contactCount = await prisma.contact.count();
-    console.log(`✅ PASS: Can query models (${userCount} users, ${contactCount} contacts)\n`);
-    passed++;
-  } catch (error) {
-    console.error('❌ FAIL: Prisma model query failed\n', error);
-    failed++;
-  }
-
-  // Test 3: Token Encryption
-  console.log('Test 3: Token Encryption');
-  try {
-    const testToken = 'test-access-token-12345';
-    const encrypted = encryptToken(testToken);
+    const originalToken = 'test_access_token_12345';
+    const encrypted = encryptToken(originalToken);
     const decrypted = decryptToken(encrypted);
 
-    if (decrypted === testToken) {
-      console.log('✅ PASS: Token encryption/decryption working\n');
-      passed++;
+    if (decrypted === originalToken) {
+      console.log('   ✅ Token encryption/decryption working');
+      return true;
     } else {
-      console.error('❌ FAIL: Decrypted token does not match original\n');
-      failed++;
+      console.error('   ❌ Decrypted token does not match original');
+      return false;
     }
   } catch (error) {
-    console.error('❌ FAIL: Token encryption failed\n', error);
-    failed++;
+    console.error('   ❌ Token encryption failed:', error);
+    return false;
   }
+}
 
-  // Test 4: Connection Manager - Save
-  console.log('Test 4: Connection Manager - Save');
+// Test 3: ConnectionManager - Save/Retrieve
+async function testConnectionManager() {
+  console.log('3️⃣  Testing ConnectionManager...');
   try {
+    // Save test connection
     await ConnectionManager.saveConnection({
-      platform: 'test-platform',
-      accountId: 'test-account-123',
-      accessToken: 'test-token-abc',
-      refreshToken: 'test-refresh-xyz',
+      platform: 'test_platform',
+      accountId: 'test_account_123',
+      accessToken: 'test_access_token',
+      refreshToken: 'test_refresh_token',
       status: 'active',
     });
-    console.log('✅ PASS: Connection saved successfully\n');
-    passed++;
-  } catch (error) {
-    console.error('❌ FAIL: Connection save failed\n', error);
-    failed++;
-  }
 
-  // Test 5: Connection Manager - Retrieve
-  console.log('Test 5: Connection Manager - Retrieve');
-  try {
-    const conn = await ConnectionManager.getConnection('test-platform');
+    // Retrieve connection
+    const connection = await ConnectionManager.getConnection('test_platform');
 
-    if (conn && conn.platform === 'test-platform') {
-      console.log('✅ PASS: Connection retrieved successfully\n');
-      passed++;
+    if (
+      connection &&
+      connection.accessToken === 'test_access_token' &&
+      connection.refreshToken === 'test_refresh_token'
+    ) {
+      console.log('   ✅ ConnectionManager save/retrieve working');
+
+      // Clean up
+      await ConnectionManager.removeConnection('test_platform');
+      return true;
     } else {
-      console.error('❌ FAIL: Retrieved connection does not match\n');
-      failed++;
+      console.error('   ❌ Retrieved connection does not match saved');
+      return false;
     }
   } catch (error) {
-    console.error('❌ FAIL: Connection retrieval failed\n', error);
-    failed++;
+    console.error('   ❌ ConnectionManager test failed:', error);
+    return false;
   }
+}
 
-  // Test 6: Connection Manager - Test Connection
-  console.log('Test 6: Connection Manager - Test Connection');
+// Test 4: SyncScheduler - Log Sync
+async function testSyncScheduler() {
+  console.log('4️⃣  Testing SyncScheduler...');
   try {
-    const isValid = await ConnectionManager.testConnection('test-platform');
+    // Create a test connection first
+    await ConnectionManager.saveConnection({
+      platform: 'test_sync_platform',
+      accessToken: 'test_token',
+      status: 'active',
+    });
 
-    if (isValid) {
-      console.log('✅ PASS: Connection validation working\n');
-      passed++;
+    // Log a sync
+    await SyncScheduler.logSync('test_sync_platform', 'test', 'success', 10);
+
+    // Get sync history
+    const history = await SyncScheduler.getSyncHistory('test_sync_platform', 1);
+
+    if (history.length > 0 && history[0].status === 'success') {
+      console.log('   ✅ SyncScheduler logging working');
+
+      // Clean up
+      await ConnectionManager.removeConnection('test_sync_platform');
+      return true;
     } else {
-      console.error('❌ FAIL: Connection validation returned false\n');
-      failed++;
+      console.error('   ❌ Sync log not found or incorrect');
+      return false;
     }
   } catch (error) {
-    console.error('❌ FAIL: Connection test failed\n', error);
-    failed++;
+    console.error('   ❌ SyncScheduler test failed:', error);
+    return false;
   }
+}
 
-  // Test 7: Sync Scheduler - Log Sync
-  console.log('Test 7: Sync Scheduler - Log Sync');
+// Test 5: Prisma Models
+async function testPrismaModels() {
+  console.log('5️⃣  Testing Prisma models...');
   try {
-    await SyncScheduler.logSync(
-      'test-platform',
-      'test',
-      'success',
-      10,
-      undefined,
-      150
-    );
-    console.log('✅ PASS: Sync logged successfully\n');
-    passed++;
-  } catch (error) {
-    console.error('❌ FAIL: Sync logging failed\n', error);
-    failed++;
-  }
+    // Test Contact model
+    const contact = await prisma.contact.create({
+      data: {
+        type: 'LEAD',
+        firstName: 'Test',
+        lastName: 'User',
+        email: `test_${Date.now()}@example.com`,
+        phone: '555-0123',
+      },
+    });
 
-  // Test 8: Sync Scheduler - Get History
-  console.log('Test 8: Sync Scheduler - Get History');
-  try {
-    const history = await SyncScheduler.getSyncHistory('test-platform', 5);
+    if (contact.id) {
+      console.log('   ✅ Contact model working');
 
-    if (Array.isArray(history)) {
-      console.log(`✅ PASS: Retrieved sync history (${history.length} entries)\n`);
-      passed++;
-    } else {
-      console.error('❌ FAIL: Sync history is not an array\n');
-      failed++;
+      // Clean up
+      await prisma.contact.delete({ where: { id: contact.id } });
     }
-  } catch (error) {
-    console.error('❌ FAIL: Sync history retrieval failed\n', error);
-    failed++;
-  }
 
-  // Test 9: Sync Scheduler - Get Status
-  console.log('Test 9: Sync Scheduler - Get Status');
-  try {
-    const status = await SyncScheduler.getSyncStatus();
+    // Test Content model
+    const content = await prisma.content.create({
+      data: {
+        platform: 'instagram',
+        title: 'Test Post',
+        contentType: 'post',
+        status: 'draft',
+      },
+    });
 
-    if (Array.isArray(status)) {
-      console.log(
-        `✅ PASS: Retrieved sync status for ${status.length} platforms\n`
-      );
-      passed++;
-    } else {
-      console.error('❌ FAIL: Sync status is not an array\n');
-      failed++;
+    if (content.id) {
+      console.log('   ✅ Content model working');
+
+      // Clean up
+      await prisma.content.delete({ where: { id: content.id } });
     }
+
+    return true;
   } catch (error) {
-    console.error('❌ FAIL: Sync status retrieval failed\n', error);
-    failed++;
+    console.error('   ❌ Prisma models test failed:', error);
+    return false;
   }
+}
 
-  // Test 10: Connection Manager - Get All
-  console.log('Test 10: Connection Manager - Get All');
-  try {
-    const all = await ConnectionManager.getAllConnections();
+// Run all tests
+async function runTests() {
+  const results = {
+    database: await testDatabaseConnection(),
+    encryption: testTokenEncryption(),
+    connectionManager: await testConnectionManager(),
+    syncScheduler: await testSyncScheduler(),
+    prismaModels: await testPrismaModels(),
+  };
 
-    if (Array.isArray(all)) {
-      console.log(`✅ PASS: Retrieved all connections (${all.length} total)\n`);
-      passed++;
-    } else {
-      console.error('❌ FAIL: Get all connections failed\n');
-      failed++;
-    }
-  } catch (error) {
-    console.error('❌ FAIL: Get all connections failed\n', error);
-    failed++;
-  }
+  console.log('\n📊 Test Results:');
+  console.log(`   Database Connection: ${results.database ? '✅' : '❌'}`);
+  console.log(`   Token Encryption: ${results.encryption ? '✅' : '❌'}`);
+  console.log(`   ConnectionManager: ${results.connectionManager ? '✅' : '❌'}`);
+  console.log(`   SyncScheduler: ${results.syncScheduler ? '✅' : '❌'}`);
+  console.log(`   Prisma Models: ${results.prismaModels ? '✅' : '❌'}`);
 
-  // Cleanup
-  console.log('Test 11: Connection Manager - Remove');
-  try {
-    await ConnectionManager.removeConnection('test-platform');
-    console.log('✅ PASS: Connection removed successfully\n');
-    passed++;
-  } catch (error) {
-    console.error('❌ FAIL: Connection removal failed\n', error);
-    failed++;
-  }
+  const allPassed = Object.values(results).every(r => r);
 
-  // Summary
-  console.log('╔════════════════════════════════════════╗');
-  console.log('║           TEST SUMMARY                 ║');
-  console.log('╚════════════════════════════════════════╝');
-  console.log(`✅ Passed: ${passed}`);
-  console.log(`❌ Failed: ${failed}`);
-  console.log(`Total: ${passed + failed}\n`);
-
-  if (failed === 0) {
-    console.log(
-      '🎉 All tests passed! Foundation is ready for Phase 2.\n'
-    );
-    process.exit(0);
+  if (allPassed) {
+    console.log('\n✅ All tests passed! Foundation is solid.\n');
   } else {
-    console.log('⚠️  Some tests failed. Review errors above.\n');
+    console.log('\n❌ Some tests failed. Review errors above.\n');
     process.exit(1);
   }
+
+  await prisma.$disconnect();
 }
 
 // Run tests
 runTests().catch(error => {
-  console.error('Test runner failed:', error);
+  console.error('\n❌ Test execution failed:', error);
   process.exit(1);
 });

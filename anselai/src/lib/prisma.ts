@@ -3,6 +3,7 @@
  * Prevents multiple instances in development
  */
 
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
