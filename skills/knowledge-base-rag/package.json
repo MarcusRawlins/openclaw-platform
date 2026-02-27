@@ -13,6 +13,7 @@
     "list": "node manage.js list"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
     "cheerio": "^1.0.0-rc.12",
     "node-fetch": "^2.7.0",
     "sqlite-vec": "^0.1.6",
