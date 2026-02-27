@@ -1,196 +1,169 @@
-/**
- * Confidentiality Guard
- * Enforces strict financial data security rules
- * - Blocks dollar amounts in group chats
- * - Redacts sensitive numbers automatically
- * - Uses directional language for safe group messaging
- * - Tracks all access
- */
-
 class ConfidentialityGuard {
-  /**
-   * Check if text contains explicit dollar amounts
-   */
+  // Check if message contains dollar amounts
   containsDollarAmounts(text) {
     const patterns = [
-      /\$[\d,]+\.?\d*/g,                    // $1,234.56
-      /\d+\.\d{2}\s+(dollars?|usd)/gi,     // 1234.56 dollars
-      /\b(revenue|income|profit|expense)\s*[:=]?\s*\d+[,\d]*/gi  // revenue: 50000
+      /\$[\d,]+\.?\d*/g,            // $1,234.56
+      /\d+\.\d{2}\s*(dollars?)/gi,  // 1234.56 dollars
+      /revenue.*\d+/gi,             // revenue 50000
+      /expense.*\d+/gi,             // expense 1200
+      /profit.*\d+/gi,              // profit 3000
+      /income.*\d+/gi,              // income 42000
+      /\d+\s*k\s*(revenue|profit|income)/gi  // 50k revenue
     ];
 
     return patterns.some(p => p.test(text));
   }
 
-  /**
-   * Redact dollar amounts from message
-   */
+  // Redact dollar amounts from outbound messages
   redactMessage(text) {
     let redacted = text;
 
     // Replace $X,XXX.XX patterns
     redacted = redacted.replace(/\$[\d,]+\.?\d*/g, '[amount redacted]');
 
-    // Replace "X dollars/usd" patterns
-    redacted = redacted.replace(/\d+\.?\d*\s*(dollars?|usd|euro|£)/gi, '[amount redacted]');
+    // Replace "X dollars" patterns
+    redacted = redacted.replace(/\d+\.?\d*\s*(dollars?)/gi, '[amount redacted]');
 
-    // Replace "revenue: X" type patterns
-    redacted = redacted.replace(/(revenue|income|profit|expense|cost)\s*[:=]?\s*\d+[,\d]*/gi, '$1: [amount redacted]');
+    // Replace standalone numbers near financial keywords
+    redacted = redacted.replace(/revenue.*?(\d+[\d,]*\.?\d*)/gi, 'revenue [redacted]');
+    redacted = redacted.replace(/expense.*?(\d+[\d,]*\.?\d*)/gi, 'expense [redacted]');
+    redacted = redacted.replace(/profit.*?(\d+[\d,]*\.?\d*)/gi, 'profit [redacted]');
+    redacted = redacted.replace(/income.*?(\d+[\d,]*\.?\d*)/gi, 'income [redacted]');
 
     return redacted;
   }
 
-  /**
-   * Convert specific financial metric to directional language
-   * Example: revenue 50000 → "revenue trending up 15%"
-   */
+  // Convert specific amounts to directional language
   toDirectionalLanguage(currentValue, previousValue, metricName) {
     if (!previousValue || previousValue === 0) {
-      return `${metricName}: data available (initial period)`;
+      return `${metricName}: baseline established`;
     }
 
-    const change = ((currentValue - previousValue) / previousValue) * 100;
+    const change = ((currentValue - previousValue) / previousValue * 100).toFixed(1);
     const direction = change > 0 ? 'up' : change < 0 ? 'down' : 'flat';
-    const magnitude = Math.abs(change).toFixed(1);
+    const magnitude = Math.abs(parseFloat(change));
 
-    return `${metricName} trending ${direction} ${magnitude}%`;
+    let descriptor = '';
+    if (magnitude < 5) descriptor = 'slightly';
+    else if (magnitude < 15) descriptor = '';
+    else if (magnitude < 30) descriptor = 'significantly';
+    else descriptor = 'sharply';
+
+    if (direction === 'flat') {
+      return `${metricName} holding steady`;
+    }
+
+    return `${metricName} trending ${descriptor} ${direction} ${Math.abs(change)}%`.trim();
   }
 
-  /**
-   * Determine if context allows financial data sharing
-   */
+  // Check context and enforce rules
   shouldAllow(context, containsFinancialData) {
     if (!containsFinancialData) {
       return { allowed: true };
     }
 
-    // ALLOWED contexts
-    const allowedContexts = ['private', 'direct', 'financials_channel', 'walt_analysis'];
-
-    if (allowedContexts.includes(context)) {
+    // Always allow in private contexts
+    if (context === 'private' || context === 'direct' || context === 'dm') {
       return { allowed: true };
     }
 
-    // GROUP CHATS: Block
-    if (context.includes('group') || context.includes('team') || context.includes('public')) {
-      return {
-        allowed: false,
-        reason: 'Financial data cannot be shared in group chats',
-        suggestion: 'Use directional language (e.g., "revenue trending up 12%") without specific amounts',
-        action: 'redact'
-      };
+    // Dedicated financials channel is OK
+    if (context === 'financials_channel' || context === 'financials') {
+      return { allowed: true };
     }
 
-    // Unknown context: default to blocking
+    // Group chats: block specific amounts
     return {
       allowed: false,
-      reason: 'Unknown context - defaulting to secure (financial data protected)',
-      suggestion: 'Use directional language or post in private/financials channel',
-      action: 'redact'
+      reason: 'Financial data cannot be shared in group chats',
+      suggestion: 'Use directional language (e.g., "revenue trending up 12%") without specific amounts'
     };
   }
 
-  /**
-   * Generate safe, directional summary for group chat
-   * Input: Financial report with exact numbers
-   * Output: Message with no dollar amounts, only trends
-   */
-  generateGroupSafeSummary(report, metricType = 'financial') {
-    if (metricType === 'pnl') {
-      // P&L report: show trends, not amounts
-      const revenueChange = report.revenue.total > 0 ? '+' : '';
-      const direction = report.netIncome > 0 ? 'positive' : 'negative';
+  // Create safe summary for group contexts
+  createSafeSummary(data) {
+    if (!data || typeof data !== 'object') return data;
 
-      return `📊 Financial summary: period ended with ${direction} net result. ` +
-             `Multiple revenue streams and expense categories tracked. ` +
-             `Detailed report available in private channel.`;
+    const safe = { ...data };
+
+    // Replace any numeric values in financial fields
+    for (const key of Object.keys(safe)) {
+      if (typeof safe[key] === 'number' && (
+        key.includes('amount') ||
+        key.includes('revenue') ||
+        key.includes('expense') ||
+        key.includes('income') ||
+        key.includes('profit') ||
+        key.includes('total')
+      )) {
+        safe[key] = '[redacted]';
+      }
+
+      // Handle nested objects
+      if (typeof safe[key] === 'object' && safe[key] !== null) {
+        safe[key] = this.createSafeSummary(safe[key]);
+      }
     }
 
-    if (metricType === 'invoices') {
-      return `📄 Invoice status: ${report.total} invoices tracked. ` +
-             `Some require attention. ` +
-             `Detailed breakdown available to authorized users only.`;
-    }
-
-    if (metricType === 'trends') {
-      return `📈 Financial trends: tracking performance over multiple periods. ` +
-             `Month-over-month analysis available in financials channel.`;
-    }
-
-    return 'Financial data summary available in authorized context only.';
+    return safe;
   }
 
-  /**
-   * Classify message context
-   */
-  classifyContext(channelInfo) {
-    if (channelInfo.isPrivate || channelInfo.isDirect) {
-      return 'private';
-    }
+  // Validate that a message is safe for the given context
+  validate(message, context) {
+    const containsFinancials = this.containsDollarAmounts(message);
+    const check = this.shouldAllow(context, containsFinancials);
 
-    if (channelInfo.name && channelInfo.name.includes('finance')) {
-      return 'financials_channel';
-    }
-
-    if (channelInfo.isGroup || channelInfo.members > 5) {
-      return 'group';
-    }
-
-    if (channelInfo.isPublic) {
-      return 'public';
-    }
-
-    return 'unknown';
-  }
-
-  /**
-   * Audit trail: was this message redacted?
-   */
-  createAuditRecord(agent, originalText, redactedText, context, reason) {
-    return {
-      timestamp: new Date().toISOString(),
-      agent,
-      context,
-      originalLength: originalText.length,
-      redactedLength: redactedText ? redactedText.length : 0,
-      wasRedacted: originalText !== redactedText,
-      reason
-    };
-  }
-
-  /**
-   * Policy check: validate message before sending to group
-   */
-  validateGroupMessage(text) {
-    const hasDollars = this.containsDollarAmounts(text);
-
-    if (hasDollars) {
+    if (!check.allowed) {
       return {
-        valid: false,
-        error: 'Message contains dollar amounts',
-        suggestion: this.redactMessage(text),
-        severity: 'block'
+        safe: false,
+        reason: check.reason,
+        suggestion: check.suggestion,
+        redactedMessage: this.redactMessage(message)
       };
     }
 
-    // Check for other financial keywords with numbers
-    const financialKeywords = ['revenue', 'expense', 'profit', 'cost', 'invoice', 'amount'];
-    const hasFinancialData = financialKeywords.some(kw => text.toLowerCase().includes(kw));
-
-    if (hasFinancialData && /\d{4,}/.test(text)) {
-      // Has financial keyword + large numbers
-      return {
-        valid: false,
-        error: 'Message contains potential financial data',
-        suggestion: 'Remove specific numbers and use directional language',
-        severity: 'warn'
-      };
-    }
-
-    return {
-      valid: true,
-      error: null
-    };
+    return { safe: true, message };
   }
 }
 
 module.exports = new ConfidentialityGuard();
+
+// CLI test
+if (require.main === module) {
+  const guard = new ConfidentialityGuard();
+
+  // Test cases
+  const tests = [
+    { text: 'Revenue was $50,000 last month', context: 'group' },
+    { text: 'We spent 1200 dollars on marketing', context: 'group' },
+    { text: 'Profit this quarter: 42000', context: 'private' },
+    { text: 'Revenue trending up 15% compared to last quarter', context: 'group' },
+    { text: 'Just a regular message about tasks', context: 'group' }
+  ];
+
+  console.log('=== Confidentiality Guard Tests ===\n');
+
+  for (const test of tests) {
+    console.log(`Context: ${test.context}`);
+    console.log(`Original: "${test.text}"`);
+    
+    const result = guard.validate(test.text, test.context);
+    
+    if (result.safe) {
+      console.log('✅ SAFE - Message can be sent');
+    } else {
+      console.log('❌ BLOCKED - ' + result.reason);
+      console.log(`Suggestion: ${result.suggestion}`);
+      console.log(`Redacted: "${result.redactedMessage}"`);
+    }
+    
+    console.log('');
+  }
+
+  // Test directional language
+  console.log('=== Directional Language Examples ===\n');
+  console.log(guard.toDirectionalLanguage(50000, 45000, 'Revenue'));
+  console.log(guard.toDirectionalLanguage(8000, 12000, 'Marketing expenses'));
+  console.log(guard.toDirectionalLanguage(10000, 10050, 'Monthly costs'));
+  console.log(guard.toDirectionalLanguage(75000, 50000, 'Client revenue'));
+}

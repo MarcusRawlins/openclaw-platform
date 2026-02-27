@@ -1,378 +1,298 @@
-# Financial Tracking System Skill
+# Financial Tracking System
 
-**Status:** Production-ready  
-**Cost:** Zero (local LLM, SQLite)  
-**Confidentiality:** CRITICAL - Financial data is strictly private
+**Version:** 1.0.0  
+**Author:** Brunel Edison  
+**Priority:** High (BI Council dependency)
 
 ## Overview
 
-Complete financial management system with:
-- CSV/Excel import with auto-detection and deduplication
-- SQLite database (transactions, invoices, accounts, monthly summaries)
-- Natural language queries (converts English → SQL via local LLM)
-- Standard reports (P&L, Balance Sheet, open invoices)
-- Strict confidentiality enforcement (dollar amount redaction, directional language)
-- Access audit log (HIPAA-style tracking)
-- CLI tool for all operations
+Complete financial data management system with CSV/Excel import, natural language querying, standard reports (P&L, Balance Sheet, Cash Flow), and strict confidentiality enforcement.
+
+## Features
+
+✅ Auto-detect and import CSV/Excel files (transactions, invoices, accounts)  
+✅ Deduplication (SHA256 hash prevents duplicate imports)  
+✅ Natural language to SQL queries (via local LLM)  
+✅ Standard financial reports (P&L, Balance Sheet, Cash Flow, Open Invoices)  
+✅ Confidentiality layer (automatic redaction for group chats)  
+✅ Audit trail (all queries logged)  
+✅ Monthly summaries (auto-calculated)  
+✅ CLI tool for all operations
 
 ## Database
 
 **Location:** `/Volumes/reeseai-memory/data/finance/finance.db`
 
 **Tables:**
-- `accounts` - Chart of accounts (asset, liability, equity, revenue, expense)
-- `transactions` - All debits/credits with automatic deduplication
-- `invoices` - Client invoices with status tracking
-- `monthly_summary` - Auto-calculated P&L by month
-- `access_log` - Audit trail of all queries (confidentiality critical)
+- `accounts` - Chart of accounts
+- `transactions` - All financial transactions (double-entry ready)
+- `invoices` - Invoice tracking with status
+- `monthly_summary` - Auto-calculated monthly rollups
+- `access_log` - Audit trail of all queries
 
-## Usage
-
-### Initialize Database
+## Installation
 
 ```bash
-node skills/financial-tracking/db-init.js
+cd /Users/marcusrawlins/.openclaw/workspace/skills/financial-tracking
+bun install
 ```
 
-Creates tables, indexes, and schema. Safe to run multiple times.
+## Usage
 
 ### Import Data
 
 ```bash
-node skills/financial-tracking/finance-cli.js import <file.csv|xlsx>
+# Auto-detect file type and import
+node finance.js import ~/Downloads/transactions-2026.csv
+
+# Imports transactions, invoices, or chart of accounts
+# Automatically deduplicates based on hash
 ```
 
-**Auto-detects file type:**
-- `transactions` - If has "date", "amount", "description"
-- `invoices` - If has "invoice", "client", "amount"
-- `chart_of_accounts` - If has "account", "type"
+**Supported formats:**
+- CSV files (transactions, invoices, accounts)
+- Excel files (.xlsx, .xls)
 
-**Deduplication:** Uses SHA256(date+amount+description) to prevent duplicates
+**Auto-detection:**
+- Transactions: columns include "date" + "amount"
+- Invoices: columns include "invoice" + "amount"
+- Accounts: columns include "account" + "type"
 
-**Example:**
-```bash
-finance-cli import QuickBooks-export.csv
-```
-
-### Natural Language Queries
+### Query Data
 
 ```bash
-node skills/financial-tracking/finance-cli.js query "How much revenue last month?"
-```
+# Natural language query (private context)
+node finance.js query "what was our revenue last month?"
 
-**How it works:**
-1. Your English question → sent to local LLM
-2. LLM converts to SQL (via Mistral on LM Studio)
-3. Query executes, results returned
-4. Access logged for audit trail
-
-**Examples:**
-```bash
-finance-cli query "What were our top 5 expenses?"
-finance-cli query "How much did we spend on marketing in Q1?"
-finance-cli query "Show all unpaid invoices over $5000"
-finance-cli query "What's our year-to-date revenue?"
+# Query with non-private context (amounts redacted)
+node finance.js query "what was revenue last month" --context=group
 ```
 
 ### Standard Reports
 
-**Profit & Loss:**
 ```bash
-finance-cli pnl 2026-01-01 2026-01-31
+# Profit & Loss
+node finance.js pnl 2026-01-01 2026-01-31
+
+# Balance Sheet (as of date)
+node finance.js balance-sheet 2026-02-27
+
+# Open Invoices
+node finance.js invoices
+
+# Cash Flow
+node finance.js cashflow 2026-01-01 2026-01-31
+
+# Monthly Summary
+node finance.js monthly 2026
+
+# Top Expenses by Category
+node finance.js top-expenses 2026-01-01 2026-01-31 10
 ```
 
-Shows revenue, expenses by category, net income, profit margin.
+### Confidentiality Validation
 
-**Open Invoices:**
 ```bash
-finance-cli invoices
+# Check if message is safe for context
+node finance.js validate-message "Revenue was $50k last month" group
+# ❌ BLOCKED - Financial data cannot be shared in group chats
+# Suggestion: Use directional language (e.g., "revenue trending up 12%")
 ```
-
-Shows unpaid/overdue invoices, days until due.
-
-**Monthly Trends:**
-```bash
-finance-cli trends 12
-```
-
-Shows last 12 months of revenue, expenses, net income.
-
-**Access Audit:**
-```bash
-finance-cli audit 30
-```
-
-Shows all financial queries from last 30 days, redaction status.
-
-### Confidentiality Guard
-
-**Redact sensitive data:**
-```bash
-finance-cli redact "Revenue was $50,000 in January"
-```
-
-Output: `Revenue was [amount redacted] in January`
 
 ## Confidentiality Rules
 
-### CRITICAL: Financial data is STRICTLY CONFIDENTIAL
+### Private Contexts (ALLOWED)
+- Direct messages to Tyler
+- Private chat with Marcus
+- `#financials` dedicated channel
 
-**Private contexts (ALLOWED):**
-- `private` - Direct message with Marcus
-- `direct` - 1-on-1 chat
-- `financials_channel` - Dedicated #financials channel
-- `walt_analysis` - Walt's financial analysis
+### Group Contexts (BLOCKED)
+- Dollar amounts are automatically redacted
+- Use directional language instead:
+  - ✅ "Revenue trending up 15% this month"
+  - ❌ "Revenue was $50,000 this month"
 
-**Group contexts (BLOCKED):**
-- `group` - Team chats, group channels
-- `public` - Public channels, announcements
+### Automatic Redaction
+The confidentiality guard automatically:
+- Detects dollar amounts in messages
+- Redacts specific numbers
+- Suggests directional language alternatives
+- Logs all access attempts
 
-### Automatic Enforcement
+## Natural Language Query Examples
 
-**When sharing financial data in groups:**
-1. Dollar amounts automatically redacted: `$50,000` → `[amount redacted]`
-2. Use directional language: "Revenue trending up 15%" (no actual amount)
-3. Access logged with `redacted=true` for audit trail
-4. Bot refuses to send unredacted data to groups
+```bash
+"what was our revenue last month?"
+"show me expenses over $1000 in January"
+"which vendors did we pay the most?"
+"how much did we spend on marketing last quarter?"
+"what's our profit margin year-to-date?"
+```
 
-**Example:**
+The system converts these to SQL using local LLM (qwen3:4b).
+
+## Programmatic Usage
+
+### Import Module
+
 ```javascript
-// Private context - allowed
-result = engine.query("Q1 revenue?", context='private')
-// → { results: [{amount: 50000}], redacted: false }
+const FinancialImporter = require('./import');
 
-// Group context - automatically redacted
-result = engine.query("Q1 revenue?", context='group')
-// → { results: [{amount: '[REDACTED]'}], redacted: true }
+const importer = new FinancialImporter();
+
+const result = await importer.importFile('/path/to/transactions.csv');
+// { imported: 150, skipped: 5, type: 'transactions' }
+
+importer.close();
+```
+
+### Query Module
+
+```javascript
+const FinancialQueryEngine = require('./query');
+
+const queryEngine = new FinancialQueryEngine();
+
+// Natural language query
+const results = await queryEngine.query("what was revenue last month?", 'private');
+
+// Standard reports
+const pnl = queryEngine.profitAndLoss('2026-01-01', '2026-01-31');
+const invoices = queryEngine.openInvoices();
+const cashflow = queryEngine.cashFlow('2026-01-01', '2026-01-31');
+
+queryEngine.close();
+```
+
+### Confidentiality Guard
+
+```javascript
+const ConfidentialityGuard = require('./confidentiality');
+
+// Validate message safety
+const result = ConfidentialityGuard.validate(
+  "Revenue was $50,000 last month",
+  'group'
+);
+
+if (!result.safe) {
+  console.log(result.reason);          // "Financial data cannot be shared in group chats"
+  console.log(result.redactedMessage); // "Revenue was [amount redacted] last month"
+}
+
+// Convert to directional language
+const safe = ConfidentialityGuard.toDirectionalLanguage(50000, 45000, 'Revenue');
+// "Revenue trending up 11.1%"
+```
+
+## File Format Examples
+
+### Transactions CSV
+
+```csv
+Date,Description,Amount,Category,Vendor
+2026-01-15,Website redesign payment,5000.00,Revenue,Acme Corp
+2026-01-16,Camera lens purchase,-1200.00,Equipment,B&H Photo
+2026-01-17,Marketing ads,-300.00,Marketing,Google Ads
+```
+
+### Invoices CSV
+
+```csv
+Invoice Number,Client Name,Amount,Issued Date,Due Date,Status
+INV-2026-001,Smith Wedding,3500.00,2026-01-10,2026-02-10,unpaid
+INV-2026-002,Jones Portrait,800.00,2026-01-15,2026-02-15,paid
+```
+
+### Accounts CSV
+
+```csv
+Account Name,Type,Description
+Cash,asset,Operating cash account
+Equipment,asset,Camera gear and equipment
+Accounts Payable,liability,Unpaid vendor bills
+Photography Revenue,revenue,Client payments
+Marketing,expense,Advertising and promotion
 ```
 
 ## Integration Points
 
-### With BI Council
+### Mission Control
+- Financial dashboard pulls from `finance.db`
+- Real-time P&L, cash flow, invoice tracking
+- Monthly revenue/expense charts
 
-Walt (Financial Guardian) reads from `finance.db`:
-```javascript
-const engine = new FinancialQueryEngine();
-const pnl = engine.profitAndLoss('2026-01-01', '2026-12-31', 'private', 'walt');
-// Walt gets full numbers, can analyze in isolation
+### BI Council (Walt)
+- Walt (Financial Guardian) has read access to `finance.db`
+- Can run queries and generate reports
+- Enforces confidentiality rules before outputting results
+
+### Cron Jobs
+- Monthly reminder to export QuickBooks data (1st of month, 9am)
+- Auto-import if Tyler uploads to watched folder
+
+## Audit Trail
+
+All queries are logged in `access_log` table:
+
+```sql
+SELECT * FROM access_log ORDER BY accessed_at DESC LIMIT 10;
 ```
 
-### With Notification Queue
+Includes:
+- Who queried (agent name)
+- What was queried (question or report type)
+- Context (private, group, api)
+- Whether output was redacted
+- Timestamp
 
-Monthly reminder via notification queue (high priority):
-```json
-{
-  "notification": {
-    "priority": "high",
-    "text": "Monthly financial export reminder",
-    "action": "Reminder to export latest from QuickBooks"
-  }
-}
-```
+## Next Steps
 
-### With Cron System
+1. ✅ Database schema created
+2. ✅ Import pipeline built
+3. ✅ Query engine with NL support
+4. ✅ Confidentiality layer
+5. ✅ CLI tool
+6. ⏳ Mission Control UI integration (next phase)
+7. ⏳ Cron job for monthly reminders
+8. ⏳ Walt BI Council integration
 
-Monthly export reminder at 9 AM on 1st of month:
-```bash
-# Uses cron wrapper with job logging
-*/1 * * * * /Users/marcusrawlins/.openclaw/workspace/skills/financial-tracking/cron-monthly-reminder.sh
-```
-
-## Security & Audit
-
-### Access Audit Log
-
-All queries logged:
-```
-agent | query                    | context           | redacted | accessed_at
-------|-------------------------|-------------------|----------|---------------------
-walt  | report:pnl 2026-01 ...  | walt_analysis     | false    | 2026-02-26 09:15:00
-scout | query revenue last...   | group             | true     | 2026-02-26 08:42:00
-ada   | query invoice status    | private           | false    | 2026-02-26 07:30:00
-```
-
-### What Gets Logged
-
-✅ **WHO:** Agent/person who ran the query  
-✅ **WHAT:** The actual query/question asked  
-✅ **WHERE:** Context (private, group, channel)  
-✅ **WHEN:** Timestamp  
-✅ **WHETHER:** Was output redacted?
-
-### Compliance
-
-- No raw financial data in group chats (enforced at database level)
-- All access tracked (can audit who accessed what)
-- Redaction applied consistently (no exceptions)
-- Directional language for safe group sharing
-
-## Architecture
-
-```
-User Query (English)
-         ↓
-    Local LLM (Mistral on LM Studio)
-    - Converts to SQL
-    - Security-checked (SELECT only)
-         ↓
-    SQLite Query
-         ↓
-    Results + Context Check
-         ↓
-    Private? → Full data
-    Group?  → Redacted + logged
-         ↓
-    Return to user
-```
-
-## Files
-
-- `db-init.js` - Database schema initialization
-- `import.js` - CSV/Excel import pipeline, auto-detection, deduplication
-- `query.js` - Natural language query engine, standard reports
-- `confidentiality.js` - Redaction, validation, context checks
-- `finance-cli.js` - Command-line interface
-- `cron-monthly-reminder.sh` - Monthly export reminder (created by cron system)
-
-## Dependencies
-
-- `better-sqlite3` - High-performance SQLite (already installed)
-- `node-fetch` - HTTP requests to LM Studio (already installed)
-- `xlsx` - Excel parsing (optional, CSV works without it)
-- LM Studio with Mistral model (running on port 1234)
-
-## Costs
-
-- **API calls:** $0 (uses local LLM)
-- **Database:** Included with SQLite
-- **Compute:** Runs on local machine
-
-## Examples
-
-### Example 1: Monthly P&L Review
+## Testing
 
 ```bash
-# Get January P&L
-finance-cli pnl 2026-01-01 2026-01-31
+# Test import
+echo "Date,Description,Amount
+2026-01-01,Test transaction,100.00" > /tmp/test.csv
 
-# Output:
-# 💰 Profit & Loss Report
-# Period: 2026-01-01 to 2026-01-31
-# 
-# 📈 Revenue:
-# category   | total
-# photography | $12,500
-# consulting | $3,200
-# Total: $15,700
-#
-# 📉 Expenses:
-# category    | total
-# equipment   | $2,100
-# marketing   | $1,400
-# hosting     | $45
-# Total: $3,545
-#
-# 🎯 Summary:
-# Revenue: $15,700
-# Expenses: $3,545
-# Net Income: $12,155
-# Profit Margin: 77.4%
+node finance.js import /tmp/test.csv
+
+# Test query
+node finance.js query "show me all transactions"
+
+# Test reports
+node finance.js monthly 2026
+
+# Test confidentiality
+node confidentiality.js
 ```
 
-### Example 2: Natural Language Query
+## Maintenance
 
-```bash
-finance-cli query "What was our biggest expense category last quarter?"
+- **Backups:** finance.db is included in nightly backup
+- **Cleanup:** Old access_log entries can be archived after 1 year
+- **Updates:** Monthly summaries recalculate automatically on import
 
-# Bot processes:
-# 1. Converts to SQL via LLM
-# 2. Query: SELECT category, SUM(ABS(amount)) as total FROM transactions WHERE ...
-# 3. Results: [{category: 'equipment', total: 8900}]
-# 4. Logs access to audit trail
-```
+## Security
 
-### Example 3: Safe Group Sharing
-
-```javascript
-// Walt in BI Council (group context)
-const result = await engine.query(
-  "What was Q1 revenue?",
-  context = 'group',  // Group chat
-  agent = 'walt'
-);
-
-// Result comes back redacted:
-// {
-//   results: [{amount: '[REDACTED]'}],
-//   redacted: true,
-//   message: "Financial data redacted for group context"
-// }
-
-// Walt can generate directional message:
-// "Revenue shows positive momentum this quarter"
-```
-
-### Example 4: Audit Trail Check
-
-```bash
-finance-cli audit 7
-
-# Shows last 7 days of financial access:
-# agent | query                | context    | redacted | accessed_at
-# -----|---------------------|------------|----------|---------------------
-# walt | report:pnl 2026-01  | private    | false    | 2026-02-26 09:15
-# ada  | query revenue today | group      | true     | 2026-02-25 14:30
-# ... (all accesses logged)
-```
-
-## Troubleshooting
-
-### "LM Studio not running"
-
-```bash
-# Start LM Studio
-lm-studio
-# Choose: Mistral (or compatible model)
-# Verify running on port 1234: http://127.0.0.1:1234
-```
-
-### Import fails with "Cannot auto-detect file type"
-
-```bash
-# Your CSV/Excel is missing expected columns
-# Expected for transactions: date, amount, description
-# Expected for invoices: invoice number, amount, client
-# Expected for accounts: account name, type
-
-# Check headers match expected columns
-head -1 yourfile.csv
-```
-
-### "UNIQUE constraint failed: transactions.import_hash"
-
-This is expected - means you imported the same data twice. System prevents duplicates automatically. Safe to ignore.
-
-## Future Enhancements
-
-- [ ] Direct QuickBooks API sync (instead of CSV export)
-- [ ] Multi-currency support
-- [ ] Budget vs actual analysis
-- [ ] Cash flow forecasting
-- [ ] Tax report generation
-- [ ] Integration with Walt's BI analysis engine
-- [ ] Custom report builder
-- [ ] Balance sheet generation
+- ✅ Only SELECT queries allowed (no DELETE/UPDATE via NL query)
+- ✅ Access audit trail
+- ✅ Confidentiality enforcement
+- ✅ Group chat redaction
+- ✅ Context-aware permissions
 
 ## Support
 
-For issues or questions:
-1. Check audit log: `finance-cli audit 30`
-2. Verify database: `ls -la /Volumes/reeseai-memory/data/finance/`
-3. Test query engine: `finance-cli query "test"`
-4. Review logs in Mission Control
-
----
-
-**Created:** 2026-02-26  
-**Last Updated:** 2026-02-26  
-**Maintained by:** Brunel (builder), Walt (financial validation)
+Questions? Contact:
+- Brunel Edison (builder)
+- Marcus Rawlins (chief of staff)
+- Walt (financial guardian, BI Council)

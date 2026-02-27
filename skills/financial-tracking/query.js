@@ -1,138 +1,88 @@
-#!/usr/bin/env node
-/**
- * Financial Query Engine
- * Natural language queries via local LLM, standard reports, confidentiality tracking
- */
-
 const Database = require('better-sqlite3');
-const fetch = require('node-fetch');
 
 const DB_PATH = '/Volumes/reeseai-memory/data/finance/finance.db';
-const LM_STUDIO_URL = 'http://127.0.0.1:1234/v1';
 
 class FinancialQueryEngine {
   constructor() {
     this.db = new Database(DB_PATH);
   }
 
-  /**
-   * Query using natural language via local LLM
-   */
-  async query(naturalLanguage, context = 'private', agent = 'unknown') {
-    console.log(`\n📝 Query: "${naturalLanguage}" (context: ${context})`);
+  async query(naturalLanguage, context = 'private') {
+    // Log access
+    this.logAccess('query', naturalLanguage, context);
 
-    // Log access attempt
-    this.logAccess(agent, naturalLanguage, context, false);
+    // Convert natural language to SQL using local LLM
+    const sql = await this.nlToSQL(naturalLanguage);
 
-    try {
-      // Convert NL to SQL
-      const sql = await this.nlToSQL(naturalLanguage);
-      console.log(`\n🔍 Generated SQL: ${sql.substring(0, 100)}...`);
+    // Execute query
+    const results = this.db.prepare(sql).all();
 
-      // Execute
-      const results = this.db.prepare(sql).all();
-
-      // Apply confidentiality rules
-      if (context !== 'private' && context !== 'direct' && context !== 'financials_channel') {
-        const redacted = this.redact(results, agent);
-        this.logAccess(agent, naturalLanguage, context, true); // Mark as redacted
-        return {
-          results: redacted,
-          redacted: true,
-          message: 'Financial data redacted for group context'
-        };
-      }
-
-      return {
-        results,
-        redacted: false
-      };
-    } catch (err) {
-      console.error('Query error:', err.message);
-      throw err;
+    // Apply confidentiality rules
+    if (context !== 'private') {
+      return this.redact(results, naturalLanguage);
     }
+
+    return results;
   }
 
-  /**
-   * Convert natural language to SQL using local LLM
-   */
   async nlToSQL(question) {
-    const schema = `
-Tables:
-- transactions(id, date, description, amount, category, vendor, source)
+    const schema = `Tables:
+- transactions(id, date, description, amount, category, vendor, reference)
 - invoices(id, invoice_number, client_name, amount, issued_date, due_date, paid_date, status)
 - monthly_summary(month, total_revenue, total_expenses, net_income, expense_breakdown)
-- accounts(id, name, type)
+- accounts(id, name, type, description)`;
 
-Rules:
-- Revenue = positive amounts, Expenses = negative amounts
-- Use strftime for date operations
-- "last month" = previous month
-- "this month" = current month
-- "quarter" = 3-month period
-- "YTD" = Jan 1 of current year to today
-- Always ORDER BY date DESC unless asked otherwise
-- LIMIT results to 20 unless specified differently
-`;
-
-    const prompt = `You are a SQL expert. Convert this question into a SQLite query.
-
+    const prompt = `Convert this question to a SQLite query.
 Schema: ${schema}
 
 Question: ${question}
 
-Return ONLY the SQL query, no explanation or code blocks.`;
+Rules:
+- Return ONLY the SQL query, nothing else
+- Use strftime for date operations
+- Revenue = positive amounts, Expenses = negative amounts
+- For "last quarter": use date range calculation
+- For "YTD": from Jan 1 of current year
+- For "this month": current month (strftime('%Y-%m', 'now'))
+- Always ORDER BY date DESC unless asked otherwise
+- LIMIT 20 unless specified
+- Use COALESCE for null safety
+
+SQL query:`;
 
     try {
-      const response = await fetch(`${LM_STUDIO_URL}/chat/completions`, {
+      const response = await fetch('http://127.0.0.1:1234/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'mistral',
+          model: 'qwen3:4b',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.1,
-          max_tokens: 250,
-          stream: false
-        }),
-        timeout: 30000
+          max_tokens: 200
+        })
       });
 
-      if (!response.ok) {
-        throw new Error(`LLM error: ${response.status}`);
-      }
-
       const data = await response.json();
-      if (!data.choices || !data.choices[0]) {
-        throw new Error('Invalid LLM response');
-      }
-
       let sql = data.choices[0].message.content.trim();
 
-      // Clean up if wrapped in code blocks
-      sql = sql.replace(/```sql\n?/g, '').replace(/```\n?/g, '').trim();
+      // Strip markdown code blocks if present
+      sql = sql.replace(/```sql\n?/g, '').replace(/```/g, '').trim();
 
       // Safety: only allow SELECT
       if (!sql.toUpperCase().startsWith('SELECT')) {
         throw new Error('Only SELECT queries allowed');
       }
 
-      // Validate query compiles
-      this.db.prepare(sql);
-
       return sql;
     } catch (err) {
-      if (err.message.includes('connect') || err.message.includes('ECONNREFUSED')) {
-        throw new Error('LM Studio not running. Start it with: lm-studio');
-      }
-      throw err;
+      console.error('NL to SQL failed:', err.message);
+      throw new Error('Could not convert question to SQL. Try being more specific.');
     }
   }
 
-  /**
-   * Profit & Loss report
-   */
-  profitAndLoss(startDate, endDate, context = 'private', agent = 'unknown') {
-    this.logAccess(agent, `report:pnl ${startDate} to ${endDate}`, context);
+  // Standard reports
+  profitAndLoss(startDate, endDate) {
+    this.logAccess('report:pnl', `${startDate} to ${endDate}`, 'private');
 
     const revenue = this.db.prepare(`
       SELECT category, SUM(amount) as total
@@ -150,175 +100,172 @@ Return ONLY the SQL query, no explanation or code blocks.`;
       ORDER BY total DESC
     `).all(startDate, endDate);
 
-    const totalRevenue = revenue.reduce((sum, r) => sum + parseFloat(r.total), 0);
-    const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.total), 0);
-    const netIncome = totalRevenue - totalExpenses;
-    const margin = totalRevenue > 0 ? ((netIncome / totalRevenue) * 100).toFixed(1) : 0;
+    const totalRevenue = revenue.reduce((sum, r) => sum + r.total, 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.total, 0);
 
-    const result = {
+    return {
       period: { start: startDate, end: endDate },
-      revenue: {
-        items: revenue,
-        total: parseFloat(totalRevenue.toFixed(2))
-      },
-      expenses: {
-        items: expenses,
-        total: parseFloat(totalExpenses.toFixed(2))
-      },
-      netIncome: parseFloat(netIncome.toFixed(2)),
-      margin: parseFloat(margin)
+      revenue: { items: revenue, total: totalRevenue },
+      expenses: { items: expenses, total: totalExpenses },
+      netIncome: totalRevenue - totalExpenses,
+      margin: totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100).toFixed(1) + '%' : '0%'
     };
-
-    // Apply confidentiality rules
-    if (context !== 'private') {
-      return this.redactPnL(result, agent);
-    }
-
-    return result;
   }
 
-  /**
-   * Open invoices report
-   */
-  openInvoices(context = 'private', agent = 'unknown') {
-    this.logAccess(agent, 'report:invoices', context);
+  balanceSheet(asOfDate = null) {
+    const date = asOfDate || new Date().toISOString().split('T')[0];
+    this.logAccess('report:balance-sheet', `as of ${date}`, 'private');
 
-    const invoices = this.db.prepare(`
+    // Assets
+    const assets = this.db.prepare(`
+      SELECT category, SUM(amount) as total
+      FROM transactions
+      WHERE date <= ? AND category IN ('asset', 'cash', 'accounts receivable', 'equipment')
+      GROUP BY category
+      ORDER BY total DESC
+    `).all(date);
+
+    // Liabilities
+    const liabilities = this.db.prepare(`
+      SELECT category, SUM(ABS(amount)) as total
+      FROM transactions
+      WHERE date <= ? AND category IN ('liability', 'accounts payable', 'loans')
+      GROUP BY category
+      ORDER BY total DESC
+    `).all(date);
+
+    // Calculate equity
+    const totalAssets = assets.reduce((sum, a) => sum + a.total, 0);
+    const totalLiabilities = liabilities.reduce((sum, l) => sum + l.total, 0);
+    const equity = totalAssets - totalLiabilities;
+
+    return {
+      asOfDate: date,
+      assets: { items: assets, total: totalAssets },
+      liabilities: { items: liabilities, total: totalLiabilities },
+      equity: { total: equity }
+    };
+  }
+
+  openInvoices() {
+    this.logAccess('report:invoices', 'open invoices', 'private');
+
+    return this.db.prepare(`
       SELECT *,
         CASE 
-          WHEN status = 'paid' THEN 'paid'
-          WHEN due_date < date('now') AND status != 'paid' THEN 'overdue'
-          ELSE status
+          WHEN due_date < date('now') THEN 'overdue' 
+          ELSE status 
         END as current_status,
-        CAST(julianday(due_date) - julianday('now') AS INTEGER) as days_until_due
+        julianday(due_date) - julianday('now') as days_until_due
       FROM invoices
-      WHERE status IN ('unpaid', 'overdue') OR (status = 'paid' AND paid_date >= date('now', '-30 days'))
+      WHERE status IN ('unpaid', 'overdue')
       ORDER BY due_date ASC
     `).all();
-
-    // Apply confidentiality
-    if (context !== 'private') {
-      return this.redactInvoices(invoices, agent);
-    }
-
-    return invoices;
   }
 
-  /**
-   * Monthly trends
-   */
-  monthlyTrends(months = 12, context = 'private', agent = 'unknown') {
-    this.logAccess(agent, `report:trends ${months}m`, context);
+  cashFlow(startDate, endDate) {
+    this.logAccess('report:cashflow', `${startDate} to ${endDate}`, 'private');
 
-    const trends = this.db.prepare(`
-      SELECT month, total_revenue, total_expenses, net_income
+    const inflows = this.db.prepare(`
+      SELECT date, description, amount
+      FROM transactions
+      WHERE date BETWEEN ? AND ? AND amount > 0
+      ORDER BY date DESC
+    `).all(startDate, endDate);
+
+    const outflows = this.db.prepare(`
+      SELECT date, description, amount
+      FROM transactions
+      WHERE date BETWEEN ? AND ? AND amount < 0
+      ORDER BY date DESC
+    `).all(startDate, endDate);
+
+    const totalInflows = inflows.reduce((sum, t) => sum + t.amount, 0);
+    const totalOutflows = outflows.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    return {
+      period: { start: startDate, end: endDate },
+      inflows: { items: inflows, total: totalInflows },
+      outflows: { items: outflows, total: totalOutflows },
+      netCashFlow: totalInflows - totalOutflows
+    };
+  }
+
+  monthlySummary(year = null) {
+    const y = year || new Date().getFullYear();
+    this.logAccess('report:monthly', `year ${y}`, 'private');
+
+    return this.db.prepare(`
+      SELECT * 
       FROM monthly_summary
-      ORDER BY month DESC
-      LIMIT ?
-    `).all(months);
-
-    // Reverse to chronological order
-    trends.reverse();
-
-    if (context !== 'private') {
-      return this.redactTrends(trends, agent);
-    }
-
-    return trends;
+      WHERE month LIKE ? || '%'
+      ORDER BY month
+    `).all(y);
   }
 
-  /**
-   * Redact sensitive amounts from results
-   */
-  redact(results, agent) {
-    if (!Array.isArray(results)) {
-      return results;
-    }
+  topExpensesByCategory(startDate, endDate, limit = 10) {
+    this.logAccess('report:top-expenses', `${startDate} to ${endDate}`, 'private');
 
+    return this.db.prepare(`
+      SELECT 
+        category, 
+        COUNT(*) as transaction_count,
+        SUM(ABS(amount)) as total_amount,
+        AVG(ABS(amount)) as avg_amount
+      FROM transactions
+      WHERE date BETWEEN ? AND ? AND amount < 0
+      GROUP BY category
+      ORDER BY total_amount DESC
+      LIMIT ?
+    `).all(startDate, endDate, limit);
+  }
+
+  revenueByVendor(startDate, endDate) {
+    this.logAccess('report:revenue-by-vendor', `${startDate} to ${endDate}`, 'private');
+
+    return this.db.prepare(`
+      SELECT 
+        vendor,
+        COUNT(*) as transaction_count,
+        SUM(amount) as total_revenue
+      FROM transactions
+      WHERE date BETWEEN ? AND ? AND amount > 0 AND vendor IS NOT NULL
+      GROUP BY vendor
+      ORDER BY total_revenue DESC
+    `).all(startDate, endDate);
+  }
+
+  logAccess(agent, query, context) {
+    this.db.prepare(`
+      INSERT INTO access_log (agent, query, context)
+      VALUES (?, ?, ?)
+    `).run(agent, query, context);
+  }
+
+  // Redact dollar amounts for non-private contexts
+  redact(results, query) {
+    this.db.prepare(`
+      UPDATE access_log 
+      SET redacted = 1
+      WHERE id = (SELECT MAX(id) FROM access_log)
+    `).run();
+
+    // Convert to directional language
     return results.map(row => {
       const redacted = { ...row };
       for (const [key, value] of Object.entries(redacted)) {
-        // Redact numeric fields that contain financial data
-        if (typeof value === 'number' && this.isSensitiveField(key)) {
+        if (typeof value === 'number' && (
+          key.includes('amount') || 
+          key.includes('revenue') || 
+          key.includes('expense') || 
+          key.includes('total') || 
+          key.includes('income')
+        )) {
           redacted[key] = '[REDACTED]';
         }
       }
       return redacted;
     });
-  }
-
-  redactPnL(pnl, agent) {
-    return {
-      period: pnl.period,
-      revenue: {
-        items: pnl.revenue.items.map(item => ({
-          category: item.category,
-          total: '[REDACTED]'
-        })),
-        total: '[REDACTED]'
-      },
-      expenses: {
-        items: pnl.expenses.items.map(item => ({
-          category: item.category,
-          total: '[REDACTED]'
-        })),
-        total: '[REDACTED]'
-      },
-      netIncome: '[REDACTED]',
-      margin: '[REDACTED]'
-    };
-  }
-
-  redactInvoices(invoices, agent) {
-    return invoices.map(inv => ({
-      ...inv,
-      amount: '[REDACTED]',
-      client_name: inv.client_name ? `${inv.client_name.substring(0, 1)}***` : '[REDACTED]'
-    }));
-  }
-
-  redactTrends(trends, agent) {
-    return trends.map(trend => ({
-      month: trend.month,
-      total_revenue: '[REDACTED]',
-      total_expenses: '[REDACTED]',
-      net_income: '[REDACTED]'
-    }));
-  }
-
-  isSensitiveField(fieldName) {
-    const sensitivePatterns = [
-      'amount', 'total', 'revenue', 'expense', 'income', 
-      'profit', 'loss', 'price', 'cost', 'value', 'rate'
-    ];
-    const lower = fieldName.toLowerCase();
-    return sensitivePatterns.some(p => lower.includes(p));
-  }
-
-  /**
-   * Log all access for audit trail
-   */
-  logAccess(agent, query, context = 'private', redacted = false) {
-    try {
-      this.db.prepare(`
-        INSERT INTO access_log (agent, query, context, redacted)
-        VALUES (?, ?, ?, ?)
-      `).run(agent, query, context, redacted ? 1 : 0);
-    } catch (err) {
-      console.error('Failed to log access:', err.message);
-    }
-  }
-
-  /**
-   * Get access audit log
-   */
-  getAuditLog(days = 30) {
-    return this.db.prepare(`
-      SELECT agent, query, context, redacted, accessed_at
-      FROM access_log
-      WHERE accessed_at >= datetime('now', '-' || ? || ' days')
-      ORDER BY accessed_at DESC
-    `).all(days);
   }
 
   close() {
@@ -328,60 +275,77 @@ Return ONLY the SQL query, no explanation or code blocks.`;
 
 module.exports = FinancialQueryEngine;
 
-// CLI support
+// CLI usage
 if (require.main === module) {
+  const queryEngine = new FinancialQueryEngine();
   const command = process.argv[2];
   const args = process.argv.slice(3);
-
-  const engine = new FinancialQueryEngine();
 
   (async () => {
     try {
       switch (command) {
         case 'query':
-          const question = args.join(' ');
-          const result = await engine.query(question, 'private', 'cli');
-          console.log('\n📊 Results:');
-          console.table(result.results);
+          if (!args[0]) {
+            console.error('Usage: node query.js query "your question here"');
+            process.exit(1);
+          }
+          const results = await queryEngine.query(args.join(' '), 'private');
+          console.table(results);
           break;
 
         case 'pnl':
-          const pnl = engine.profitAndLoss(args[0], args[1], 'private', 'cli');
-          console.log('\n💰 Profit & Loss:');
-          console.log(JSON.stringify(pnl, null, 2));
+          if (args.length < 2) {
+            console.error('Usage: node query.js pnl <start-date> <end-date>');
+            process.exit(1);
+          }
+          console.log(JSON.stringify(queryEngine.profitAndLoss(args[0], args[1]), null, 2));
+          break;
+
+        case 'balance-sheet':
+          const date = args[0] || null;
+          console.log(JSON.stringify(queryEngine.balanceSheet(date), null, 2));
           break;
 
         case 'invoices':
-          const invoices = engine.openInvoices('private', 'cli');
-          console.log('\n📄 Open Invoices:');
-          console.table(invoices);
+          console.table(queryEngine.openInvoices());
           break;
 
-        case 'trends':
-          const trends = engine.monthlyTrends(args[0] || 12, 'private', 'cli');
-          console.log('\n📈 Monthly Trends:');
-          console.table(trends);
+        case 'cashflow':
+          if (args.length < 2) {
+            console.error('Usage: node query.js cashflow <start-date> <end-date>');
+            process.exit(1);
+          }
+          console.log(JSON.stringify(queryEngine.cashFlow(args[0], args[1]), null, 2));
           break;
 
-        case 'audit':
-          const log = engine.getAuditLog(args[0] || 30);
-          console.log('\n🔐 Access Audit Log:');
-          console.table(log);
+        case 'monthly':
+          const year = args[0] || null;
+          console.table(queryEngine.monthlySummary(year));
+          break;
+
+        case 'top-expenses':
+          if (args.length < 2) {
+            console.error('Usage: node query.js top-expenses <start-date> <end-date> [limit]');
+            process.exit(1);
+          }
+          console.table(queryEngine.topExpensesByCategory(args[0], args[1], parseInt(args[2]) || 10));
           break;
 
         default:
           console.log(`Usage:
-  query <question>          Natural language query
-  pnl <start> <end>        Profit & Loss report
-  invoices                 Open invoices
-  trends [months]          Monthly trends
-  audit [days]             Access audit log`);
+  node query.js query "what was revenue..."     Natural language query
+  node query.js pnl <start> <end>              Profit & Loss report
+  node query.js balance-sheet [date]            Balance Sheet
+  node query.js invoices                        Open invoices
+  node query.js cashflow <start> <end>         Cash Flow report
+  node query.js monthly [year]                  Monthly summaries
+  node query.js top-expenses <start> <end>     Top expenses by category`);
       }
 
-      engine.close();
+      queryEngine.close();
     } catch (err) {
-      console.error('❌ Error:', err.message);
-      engine.close();
+      console.error('Error:', err.message);
+      queryEngine.close();
       process.exit(1);
     }
   })();
