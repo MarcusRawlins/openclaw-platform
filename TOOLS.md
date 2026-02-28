@@ -15,7 +15,13 @@ When leaving permanent text (comments, commit messages, task notes), prefix with
 ## Messaging (Telegram)
 
 - Currently DM-based. Tyler's chat ID: 8172900205
-- No topic threads configured yet.
+- Group chat ID: -1003782464464
+- Topics:
+  - General (thread 2)
+  - Devotd (thread 9)
+  - Photography (thread 43)
+  - R3 Studios (thread 44)
+  - Ops & Alerts (thread 46)
 
 ## Voice Memos
 

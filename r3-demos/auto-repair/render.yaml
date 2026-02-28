@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: r3-auto-repair-demo
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./out
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600

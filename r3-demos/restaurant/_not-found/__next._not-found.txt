@@ -1,0 +1,11 @@
+# REESE-AI KNOWLEDGE BASE: R3-Studios - Projects - Restaurant-Demo - _Not-Found
+# DATE CREATED: 2026-02-11 | LAST UPDATED: 2026-02-11
+# PURPOSE: R3-Studios - Projects - Restaurant-Demo - _Not-Found content for strategic guidance
+# KEY TOPICS: marketing, client psychology, brand consistency
+# USAGE RULES: Always reference gold examples when discussing R3-Studios - Projects - Restaurant-Demo - _Not-Found
+# EXAMPLES: gold/r3-studios/projects/restaurant-demo/_not-found/__next._not-found.txt
+
+1:"$Sreact.fragment"
+2:I[17307,["/restaurant-demo/_next/static/chunks/7fb843ebd9cb621f.js"],"default"]
+3:I[4930,["/restaurant-demo/_next/static/chunks/7fb843ebd9cb621f.js"],"default"]
+0:{"buildId":"H0y6xFRw1OdcmcK6yVDA7","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}

@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #faf7f2;
+  --green: #1a3a2f;
+  --gold: #c9a227;
+  --green-light: #2a5a4a;
+  --cream-dark: #f0ebe3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Georgia', serif;
+  background: var(--cream);
+  color: var(--green);
+}
+
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-body {
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+}

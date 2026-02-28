@@ -1,0 +1,10 @@
+# REESE-AI KNOWLEDGE BASE: R3-Studios - Projects - Restaurant-Demo
+# DATE CREATED: 2026-02-11 | LAST UPDATED: 2026-02-11
+# PURPOSE: R3-Studios - Projects - Restaurant-Demo content for strategic guidance
+# KEY TOPICS: marketing, client psychology, brand consistency
+# USAGE RULES: Always reference gold examples when discussing R3-Studios - Projects - Restaurant-Demo
+# EXAMPLES: gold/r3-studios/projects/restaurant-demo/__next._tree.txt
+
+:HL["/restaurant-demo/_next/static/chunks/559033c34cc9aad9.css","style"]
+:HL["https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lato:wght@300;400;700&display=swap","style"]
+0:{"buildId":"H0y6xFRw1OdcmcK6yVDA7","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
