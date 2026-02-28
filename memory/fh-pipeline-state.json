@@ -1,0 +1,23 @@
+{
+  "cronJobId": "a1635332-55d0-4f7d-9aa8-ddf128b21aaa",
+  "description": "Full Finance Hub build pipeline. Runs nonstop until Phase 4 complete.",
+  "pipeline": [
+    {"task": 8, "phase": 2, "label": "brunel-fh-task8", "spec": "fh-task8-ai-categorization.md", "buildStatus": "complete", "reviewStatus": "passed", "commit": "41ea72f", "attempt": 2},
+    {"task": 9, "phase": 2, "label": "brunel-fh-task9", "spec": "fh-task9-invoices.md", "buildStatus": "complete", "reviewStatus": "passed", "commit": "1f6956f"},
+    {"task": 10, "phase": 2, "label": "brunel-fh-task10", "spec": "fh-task10-budgets.md", "buildStatus": "complete", "reviewStatus": "passed", "commit": "375db1c", "attempt": 3},
+    {"task": 11, "phase": 2, "label": "brunel-fh-task11", "spec": "fh-task11-global-dashboard.md", "buildStatus": "complete", "reviewStatus": "passed", "commit": "b81a8ed", "attempt": 3},
+    {"task": 12, "phase": 3, "label": "brunel-fh-task12", "spec": "fh-task12-report-export.md", "buildStatus": "complete", "reviewStatus": "passed", "commit": "94f04a9", "attempt": 2},
+    {"task": 13, "phase": 3, "label": "brunel-fh-task13", "spec": "fh-task13-reconciliation.md", "buildStatus": "complete", "reviewStatus": "passed", "commit": "dfcebcf", "attempt": 3},
+    {"task": 14, "phase": 3, "label": "brunel-fh-task14", "spec": "fh-task14-attachments.md", "buildStatus": "complete", "reviewStatus": "passed", "commit": "209389b"},
+    {"task": 15, "phase": 3, "label": "brunel-fh-task15", "spec": "fh-task15-nlp-queries.md", "buildStatus": "complete", "reviewStatus": "passed", "commit": "fa1b662"},
+    {"task": 16, "phase": 3, "label": "brunel-fh-task16", "spec": "fh-task16-anomaly-detection.md", "buildStatus": "running", "reviewStatus": null, "sessionKey": "agent:brunel:subagent:1b0af0f6-77f2-4a81-9e33-23abf03ee667"},
+    {"task": 17, "phase": 3, "label": "brunel-fh-task17", "spec": "fh-task17-mfa-security.md", "buildStatus": "pending", "reviewStatus": null},
+    {"task": 18, "phase": 4, "label": "brunel-fh-task18", "spec": "fh-task18-rest-api.md", "buildStatus": "pending", "reviewStatus": null},
+    {"task": 19, "phase": 4, "label": "brunel-fh-task19", "spec": "fh-task19-integrations.md", "buildStatus": "pending", "reviewStatus": null},
+    {"task": 20, "phase": 4, "label": "brunel-fh-task20", "spec": "fh-task20-stripe.md", "buildStatus": "pending", "reviewStatus": null},
+    {"task": 21, "phase": 4, "label": "brunel-fh-task21", "spec": "fh-task21-square-paypal.md", "buildStatus": "pending", "reviewStatus": null},
+    {"task": 22, "phase": 4, "label": "brunel-fh-task22", "spec": "fh-task22-forecasting-tax.md", "buildStatus": "pending", "reviewStatus": null},
+    {"task": 23, "phase": 4, "label": "brunel-fh-task23", "spec": "fh-task23-export-migration.md", "buildStatus": "pending", "reviewStatus": null}
+  ],
+  "lastChecked": "2026-02-28T04:23:00-05:00"
+}
